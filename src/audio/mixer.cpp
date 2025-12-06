@@ -23,13 +23,30 @@
 #include "util/logger.hpp"
 #include "mixer.hpp"
 
+#include <miniaudio_libvorbis.h>
+
 Mixer g_mixer;
 
 Mixer::Mixer()
 {
 	ma_result result;
 
-	result = ma_engine_init(nullptr, &m_engine);
+	ma_decoding_backend_vtable* decoders[] = {
+	    ma_decoding_backend_libvorbis
+	};
+
+	ma_resource_manager_config resource_manager_cfg = ma_resource_manager_config_init();
+	resource_manager_cfg.pCustomDecodingBackendUserData = nullptr;
+	resource_manager_cfg.ppCustomDecodingBackendVTables = decoders;
+	resource_manager_cfg.customDecodingBackendCount = sizeof(decoders) / sizeof(decoders[0]);
+
+	ma_resource_manager_init(&resource_manager_cfg, &m_resource_manager);
+
+	ma_engine_config engine_cfg;
+	engine_cfg = ma_engine_config_init();
+	engine_cfg.pResourceManager = &m_resource_manager;
+
+	result = ma_engine_init(&engine_cfg, &m_engine);
 	if (result != MA_SUCCESS)
 	{
 		Logger::error("Mixer", "Oops! ded.");
@@ -40,6 +57,8 @@ Mixer::Mixer()
 	ma_device_info dev_info;
 	dev = ma_engine_get_device(&m_engine);
 	ma_device_get_info(dev, ma_device_type_playback, &dev_info);
+
+	ma_engine_start(&m_engine);
 
 	Logger::info("Mixer", "Opened audio device:");
 	Logger::info("Mixer", std::format("\tSample rate: {}Hz",
@@ -64,6 +83,9 @@ std::string Mixer::get_channels_name(u32 channels)
 void
 Mixer::shutdown()
 {
+	ma_sound_uninit(&m_music);
+	ma_engine_uninit(&m_engine);
+	ma_resource_manager_uninit(&m_resource_manager);
 	// m_music.reset();
 	// m_cache.clear();
 	//m_soundcache.clear();
@@ -72,23 +94,35 @@ Mixer::shutdown()
 bool
 Mixer::is_playing_music()
 {
-	return true;
+	return ma_sound_is_playing(&m_music);
 }
 
 void
 Mixer::stop_playing_music()
 {
-	// Mix_HaltMusic();
+	ma_sound_stop(&m_music);
 }
 
 // TODO Cache sounds
 void
 Mixer::play_sound(const std::string &filename)
 {
+	ma_engine_play_sound(&m_engine, FS::path(filename).c_str(), nullptr);
 }
 
 void
 Mixer::play_music(const std::string &filename)
 {
+	ma_result result;
+	result = ma_sound_init_from_file(&m_engine, FS::path(filename).c_str(),
+	                                 0, nullptr, nullptr, &m_music);
+
+	if (result != MA_SUCCESS) {
+		throw std::runtime_error(std::format("Failed to load music {} (ma error: {})",
+		                                     FS::path(filename),
+		                                     (int)result));
+	}
+
+	ma_sound_start(&m_music);
 }
 

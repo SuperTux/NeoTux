@@ -43,6 +43,8 @@ public:
 
 private:
 	ma_engine m_engine;
+	ma_resource_manager m_resource_manager;
+	ma_sound m_music;
 };
 
 extern Mixer g_mixer;

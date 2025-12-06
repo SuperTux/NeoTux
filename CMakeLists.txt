@@ -1,3 +1,5 @@
+# TODO: Switch to Meson
+
 cmake_minimum_required(VERSION 3.14)
 project(NeoTux LANGUAGES CXX C)
 
@@ -28,6 +30,16 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
 	cmake_policy(SET CMP0135 NEW)
 endif()
 
+set(MINIAUDIO_VERSION "0.11.23" CACHE STRING "Version of miniaudio to use")
+set(MINIAUDIO_NO_MP3 YES)
+set(MINIAUDIO_NO_FLAC YES)
+set(MINIAUDIO_NO_LIBVORBIS NO)
+FetchContent_Declare(
+	miniaudio
+	URL https://github.com/mackron/miniaudio/archive/refs/tags/${MINIAUDIO_VERSION}.tar.gz
+)
+FetchContent_MakeAvailable(miniaudio)
+
 set(SFSEXP_VERSION "1.4.1" CACHE STRING "Version of SfSexp to use")
 FetchContent_Declare(
 	sfsexp
@@ -36,22 +48,11 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(sfsexp)
 include("${PROJECT_SOURCE_DIR}/cmake/sfsexp.cmake")
 
-option(NEOTUX_USE_MIXER "Build with SDL3 Mixer support." ON)
 if (PSP)
 	message(STATUS "Building PSP version...")
-	set(NEOTUX_USE_MIXER OFF)
 	set(NEOTUX_PSP ON)
 	set(NEOTUX_DATA_DIR "data")
 endif()
-
-set(MINIAUDIO_VERSION "0.11.23" CACHE STRING "Version of miniaudio to use")
-set(MINIAUDIO_NO_MP3 YES)
-set(MINIAUDIO_NO_FLAC YES)
-FetchContent_Declare(
-	miniaudio
-	URL https://github.com/mackron/miniaudio/archive/refs/tags/${MINIAUDIO_VERSION}.tar.gz
-)
-FetchContent_MakeAvailable(miniaudio)
 
 set(SSQ_BUILD_STATIC_ONLY Off)
 
@@ -120,9 +121,15 @@ target_link_libraries(NeoTux PUBLIC
 	SDL3::SDL3
 	SDL3_ttf::SDL3_ttf
 	SDL3_image::SDL3_image
+
 	SFSEXP
+
 	miniaudio
+	miniaudio_libvorbis
 )
+
+# NOTE: They seem to have forgotten to add this include directory to the miniaudio_libvorbis target.
+target_include_directories(NeoTux SYSTEM PUBLIC ${miniaudio_SOURCE_DIR}/extras/decoders/libvorbis)
 
 if(NEOTUX_BGFX)
 	target_sources(NeoTux PRIVATE "${NEOTUX_DATA_DIR}/shaders/frag.glsl" "${NEOTUX_DATA_DIR}/shaders/vert.glsl")
