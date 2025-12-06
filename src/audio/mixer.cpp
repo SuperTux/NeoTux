@@ -41,6 +41,11 @@ Mixer::Mixer()
 	resource_manager_cfg.customDecodingBackendCount = sizeof(decoders) / sizeof(decoders[0]);
 
 	ma_resource_manager_init(&resource_manager_cfg, &m_resource_manager);
+	if (result != MA_SUCCESS)
+	{
+		Logger::error("Mixer", "Oops! ded.");
+		std::exit(-1);
+	}
 
 	ma_engine_config engine_cfg;
 	engine_cfg = ma_engine_config_init();
@@ -103,16 +108,29 @@ Mixer::stop_playing_music()
 	ma_sound_stop(&m_music);
 }
 
-// TODO Cache sounds
 void
 Mixer::play_sound(const std::string &filename)
 {
-	ma_engine_play_sound(&m_engine, FS::path(filename).c_str(), nullptr);
+	ma_result result = ma_engine_play_sound(&m_engine, FS::path(filename).c_str(), nullptr);
+	if (result != MA_SUCCESS) {
+		throw std::runtime_error(std::format("Failed to load/play sound {} (ma error: {})",
+		                                     FS::path(filename),
+		                                     (int)result));
+	}
 }
 
 void
-Mixer::play_music(const std::string &filename)
+Mixer::play_music(std::string filename)
 {
+	if (filename.ends_with(".music"))
+	{
+		MusicReader reader;
+		m_music_data = reader.open(FS::path(filename));
+		filename = FS::join(FS::parent_dir(filename), m_music_data.file);
+	} else {
+		m_music_data = {};
+	}
+
 	ma_result result;
 	result = ma_sound_init_from_file(&m_engine, FS::path(filename).c_str(),
 	                                 0, nullptr, nullptr, &m_music);
@@ -122,6 +140,14 @@ Mixer::play_music(const std::string &filename)
 		                                     FS::path(filename),
 		                                     (int)result));
 	}
+
+	ma_data_source* music_source = ma_sound_get_data_source(&m_music);
+	ma_uint32 samplerate;
+	ma_data_source_get_data_format(music_source, nullptr, nullptr, &samplerate, nullptr, 67);
+
+	ma_data_source_set_loop_point_in_pcm_frames(music_source, m_music_data.loop_begin * samplerate,
+	                                            m_music_data.loop_end * samplerate);
+	ma_sound_set_looping(&m_music, MA_TRUE);
 
 	ma_sound_start(&m_music);
 }

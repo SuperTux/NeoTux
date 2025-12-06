@@ -24,6 +24,7 @@
 
 #include <miniaudio.h>
 
+#include "audio/music_reader.hpp"
 #include "types.hpp"
 
 class Mixer
@@ -36,15 +37,17 @@ public:
 	~Mixer() = default;
 	
 	void shutdown();
-	void play_sound(const std::string &filename);
-	void play_music(const std::string &filename);
+	void play_sound(const std::string& filename);
+	void play_music(std::string filename);
 	bool is_playing_music();
 	void stop_playing_music();
 
 private:
 	ma_engine m_engine;
 	ma_resource_manager m_resource_manager;
+
 	ma_sound m_music;
+	MusicData m_music_data;
 };
 
 extern Mixer g_mixer;

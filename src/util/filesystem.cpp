@@ -29,7 +29,7 @@ namespace FS
 std::string
 path(const std::string& file)
 {
-	return std::string(NEOTUX_DATA_DIR) + "/" + file;
+	return join(NEOTUX_DATA_DIR, file);
 }
 
 std::string
@@ -40,6 +40,11 @@ parent_dir(const std::string &file)
 		return file;
 	
 	return file.substr(0, pos);
+}
+
+std::string join(const std::string &a, const std::string& b)
+{
+	return a + "/" + b;
 }
 
 }
