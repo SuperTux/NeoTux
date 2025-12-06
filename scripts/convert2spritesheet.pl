@@ -20,6 +20,7 @@ use Image::Magick;
 use File::Find;
 use File::Basename;
 use File::Spec;
+use File::Path;
 use Getopt::Long;
 use Data::Dumper;
 
@@ -177,6 +178,9 @@ sub parse_sprite_data
 	
 	$sexp = ";; Ugly trash proudly produced by ./convert2spritesheet.pl
 (supertux-sprite\n $spritesheet_sexp)) $sexp )";
+
+	File::Path::make_path(dest_dir($dir).'/');
+
 	open my $fh, '>', dest_dir($dir).'/'.$name."_sheet.sprite" or die "Could not open sprite";
 	print $fh $sexp;
 	print "Writing ".dest_dir($dir).'/'.$name."_sheet.sprite\n";
@@ -256,6 +260,21 @@ sub parse_sprite
 	parse_sprite_data($image, $dir, $name, \@actions);
 	
 	undef $image;
+}
+
+sub is_dir_empty {
+	my ($dir) = @_;
+	opendir(my $dh, $dir) or return 1;
+	my @files = readdir($dh);
+	closedir($dh);
+	# A directory is empty if it contains only . and ..
+	return @files <= 2;
+}
+if (is_dir_empty($dest)) {
+	print qq(Warning: \'$dest\' either doesn't exist or is an empty directory!
+ The game still requires other assets to function, therefore
+ you might want to copy the game's assets from \'$src\' to \'$dest\' before proceeding
+ with the execution of the game.\n);
 }
 
 find(sub {
