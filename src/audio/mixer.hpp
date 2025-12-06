@@ -21,10 +21,8 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-#include "config.h"
-#ifdef NEOTUX_USE_MIXER
-#include <SDL3_mixer/SDL_mixer.h>
-#endif
+
+#include <miniaudio.h>
 
 class Mixer
 {
@@ -38,12 +36,6 @@ public:
 	bool is_playing_music();
 	void stop_playing_music();
 private:
-#ifdef NEOTUX_USE_MIXER
-	std::unordered_map<std::string, std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)>> m_cache;
-	std::unique_ptr<Mix_Music, decltype(&Mix_FreeMusic)> m_music;
-	int m_current_channel;
-#endif
-	//std::vector<std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)>> m_soundcache;
 };
 
 extern Mixer g_mixer;

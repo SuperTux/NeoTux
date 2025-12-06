@@ -25,101 +25,43 @@
 
 Mixer g_mixer;
 
-#ifdef NEOTUX_USE_MIXER
-Mixer::Mixer() :
-	m_music(nullptr, Mix_FreeMusic),
-	m_cache(),
-	m_current_channel(0)
+Mixer::Mixer()
 {
-	SDL_AudioSpec spec;
-	spec.freq = MIX_DEFAULT_FREQUENCY;
-	spec.format = MIX_DEFAULT_FORMAT;
-	spec.channels = MIX_DEFAULT_CHANNELS;
-	
-	SDL_Init(SDL_INIT_AUDIO);
-	Mix_Init(MIX_INIT_OGG | MIX_INIT_WAVPACK);
-	
-	Mix_OpenAudio(0, &spec);
 	Logger::info(std::format("Opened audio at {}Hz, {} bit{}, {} audio buffer",
-		spec.freq,
-		spec.format & 0xFF,
-		SDL_AUDIO_ISFLOAT(spec.format) ? " (float)" : "",
-		(spec.channels > 2) ? "surround" : (spec.channels > 1) ? "stereo" : "mono")); 
+	    420,
+	    67,
+	    true ? " (float)" : "",
+	    false ? "surround" : true ? "stereo" : "mono"));
 }
-#else
-Mixer::Mixer() {
-	Logger::info("Built without SDL3 Mixer support. Hope you enjoy crickets.");
-}
-#endif
 
 void
 Mixer::shutdown()
 {
-#ifdef NEOTUX_USE_MIXER
-	m_music.reset();
-	m_cache.clear();
+	// m_music.reset();
+	// m_cache.clear();
 	//m_soundcache.clear();
-#endif
 }
 
 bool
 Mixer::is_playing_music()
 {
-#ifdef NEOTUX_USE_MIXER
-	return Mix_PlayingMusic();
-#else
 	return true;
-#endif
 }
 
 void
 Mixer::stop_playing_music()
 {
-#ifdef NEOTUX_USE_MIXER
-	Mix_HaltMusic();
-#endif
+	// Mix_HaltMusic();
 }
 
 // TODO Cache sounds
 void
 Mixer::play_sound(const std::string &filename)
 {
-#ifdef NEOTUX_USE_MIXER
-	Mix_Chunk *chunk;
-	if (m_cache.contains(filename))
-	{
-		chunk = m_cache.at(filename).get();
-	}
-	else {
-		chunk = Mix_LoadWAV(FS::path(filename).c_str());
-		m_cache.insert({filename, std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)>(chunk, Mix_FreeChunk)});
-	}
-	
-	if (!chunk)
-		throw SDLException("Couldn't load chunk");
-	
-	++m_current_channel;
-	if (m_current_channel == 4)
-		m_current_channel = 0;
-	Mix_PlayChannel(m_current_channel, chunk, false);
-#endif
 }
 
 void
 Mixer::play_music(const std::string &filename)
 {
-#ifdef NEOTUX_USE_MIXER
-	Mix_Music *music;
-	music = Mix_LoadMUS(FS::path(filename).c_str());
-	
-	if (!music)
-	{
-		throw SDLException("Couldn't load music");
-	}
-	
-	Mix_FadeInMusic(music, true, 2000);
-	
-	m_music.reset(music);
-#endif
 }
 
