@@ -24,8 +24,13 @@
 
 #include <miniaudio.h>
 
+#include "types.hpp"
+
 class Mixer
 {
+public:
+	static std::string get_channels_name(u32 channels);
+
 public:
 	Mixer();
 	~Mixer() = default;
@@ -35,7 +40,9 @@ public:
 	void play_music(const std::string &filename);
 	bool is_playing_music();
 	void stop_playing_music();
+
 private:
+	ma_engine m_engine;
 };
 
 extern Mixer g_mixer;

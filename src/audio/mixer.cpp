@@ -27,11 +27,38 @@ Mixer g_mixer;
 
 Mixer::Mixer()
 {
-	Logger::info(std::format("Opened audio at {}Hz, {} bit{}, {} audio buffer",
-	    420,
-	    67,
-	    true ? " (float)" : "",
-	    false ? "surround" : true ? "stereo" : "mono"));
+	ma_result result;
+
+	result = ma_engine_init(nullptr, &m_engine);
+	if (result != MA_SUCCESS)
+	{
+		Logger::error("Mixer", "Oops! ded.");
+		std::exit(-1);
+	}
+
+	ma_device* dev;
+	ma_device_info dev_info;
+	dev = ma_engine_get_device(&m_engine);
+	ma_device_get_info(dev, ma_device_type_playback, &dev_info);
+
+	Logger::info("Mixer", "Opened audio device:");
+	Logger::info("Mixer", std::format("\tSample rate: {}Hz",
+	                                  dev_info.nativeDataFormats[0].sampleRate));
+	Logger::info("Mixer", std::format("\tChannels: {} sound ({})",
+	                                  get_channels_name(dev_info.nativeDataFormats[0].channels),
+	                                  dev_info.nativeDataFormats[0].channels));
+	Logger::info("Mixer", std::format("\tFormat: {}",
+	                                  ma_get_format_name(dev_info.nativeDataFormats[0].format)));
+}
+
+std::string Mixer::get_channels_name(u32 channels)
+{
+	if (channels > 2)
+		return "surround";
+	else if (channels > 1)
+		return "stereo";
+	else
+		return "mono";
 }
 
 void
