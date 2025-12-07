@@ -23,7 +23,7 @@
 struct MusicData {
 	std::string file;
 	u32 loop_begin = 0;
-	u32 loop_end = UINT_MAX;
+	u32 loop_at = UINT_MAX;
 };
 
 #endif // SUPERTUX_SRC_AUDIO_MUSIC_DATA_HPP

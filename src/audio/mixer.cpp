@@ -40,7 +40,7 @@ Mixer::Mixer()
 	resource_manager_cfg.ppCustomDecodingBackendVTables = decoders;
 	resource_manager_cfg.customDecodingBackendCount = sizeof(decoders) / sizeof(decoders[0]);
 
-	ma_resource_manager_init(&resource_manager_cfg, &m_resource_manager);
+	result = ma_resource_manager_init(&resource_manager_cfg, &m_resource_manager);
 	if (result != MA_SUCCESS)
 	{
 		Logger::error("Mixer", "Oops! ded.");
@@ -62,8 +62,6 @@ Mixer::Mixer()
 	ma_device_info dev_info;
 	dev = ma_engine_get_device(&m_engine);
 	ma_device_get_info(dev, ma_device_type_playback, &dev_info);
-
-	ma_engine_start(&m_engine);
 
 	Logger::info("Mixer", "Opened audio device:");
 	Logger::info("Mixer", std::format("\tSample rate: {}Hz",
@@ -146,7 +144,7 @@ Mixer::play_music(std::string filename)
 	ma_data_source_get_data_format(music_source, nullptr, nullptr, &samplerate, nullptr, 67);
 
 	ma_data_source_set_loop_point_in_pcm_frames(music_source, m_music_data.loop_begin * samplerate,
-	                                            m_music_data.loop_end * samplerate);
+	                                            m_music_data.loop_at * samplerate);
 	ma_sound_set_looping(&m_music, MA_TRUE);
 
 	ma_sound_start(&m_music);

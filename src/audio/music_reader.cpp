@@ -38,15 +38,15 @@ MusicData MusicReader::open(const std::string& filename)
 	elt = root.find_car("file");
 	if (!elt.is_valid())
 		Logger::fatal("MusicReader", "File not specified");
-	out.file = elt.get_list().get_value();
+	out.file = elt.next().get_value();
 
 	elt = root.find_car("loop-begin");
 	if (elt.is_valid())
-		out.loop_begin = elt.get_list().get_int_or(out.loop_begin);
+		out.loop_begin = elt.next().get_int_or(out.loop_begin);
 
-	elt = root.find_car("loop-end");
+	elt = root.find_car("loop-at");
 	if (elt.is_valid())
-		out.loop_end = elt.get_list().get_int_or(out.loop_end);
+		out.loop_at = elt.next().get_int_or(out.loop_at);
 
 	return out;
 }
