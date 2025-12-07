@@ -14,6 +14,7 @@
 //  You should have received a copy of the GNU General Public License 
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "mixer.hpp"
 #ifdef NEOTUX_USE_MIXER
 #include <SDL3_mixer/SDL_mixer.h>
 #endif
@@ -21,7 +22,7 @@
 #include "sdl_exception.hpp"
 #include "util/filesystem.hpp"
 #include "util/logger.hpp"
-#include "mixer.hpp"
+#include "audio/sound_manager.hpp"
 
 #include <miniaudio_libvorbis.h>
 
@@ -109,10 +110,19 @@ Mixer::stop_playing_music()
 void
 Mixer::play_sound(const std::string &filename)
 {
-	ma_result result = ma_engine_play_sound(&m_engine, FS::path(filename).c_str(), nullptr);
+	ma_sound* sound = g_sound_manager.load(filename);
+	play_sound(sound);
+}
+
+void
+Mixer::play_sound(ma_sound* sound)
+{
+	if (ma_sound_is_playing(sound))
+		ma_sound_stop(sound);
+
+	ma_result result = ma_sound_start(sound);
 	if (result != MA_SUCCESS) {
-		throw std::runtime_error(std::format("Failed to load/play sound {} (ma error: {})",
-		                                     FS::path(filename),
+		throw std::runtime_error(std::format("Failed to play sound (ma error: {})",
 		                                     (int)result));
 	}
 }

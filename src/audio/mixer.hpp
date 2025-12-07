@@ -29,6 +29,8 @@
 
 class Mixer
 {
+	friend class SoundManager;
+
 public:
 	static std::string get_channels_name(u32 channels);
 
@@ -38,6 +40,7 @@ public:
 	
 	void shutdown();
 	void play_sound(const std::string& filename);
+	void play_sound(ma_sound* sound);
 	void play_music(std::string filename);
 	bool is_playing_music();
 	void stop_playing_music();
