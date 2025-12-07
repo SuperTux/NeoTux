@@ -17,10 +17,11 @@
 #ifndef SUPERTUX_SRC_INPUT_MANAGER_HPP
 #define SUPERTUX_SRC_INPUT_MANAGER_HPP
 
-#include <SDL3/SDL_events.h>
 #include <memory>
 #include <string>
-#include <vector>
+
+union  SDL_Event;
+struct SDL_Gamepad;
 
 constexpr uint32_t BINDING_KEYBOARD_MASK = (2<<14);
 constexpr uint32_t BINDING_GAMEPAD_MASK  = (2<<14);
@@ -66,6 +67,9 @@ private:
 
 class InputManager
 {
+private:
+	struct _impl;
+	std::unique_ptr<_impl> impl;
 public:
 	InputManager();
 	~InputManager() = default;
@@ -80,9 +84,9 @@ public:
 	
 	size_t define_mapping(std::string name, Binding binding);
 	
-	bool mapping_pressed(size_t id) const { return m_bindings[id].second.pressed; }
-	Binding& mapping_at(size_t id) { return m_bindings[id].second; }
-	size_t total_mappings() const { return m_bindings.size(); }
+	bool mapping_pressed(size_t id) const;
+	Binding& mapping_at(size_t id);
+	size_t total_mappings() const;
 	
 	unsigned get_mouse_x() const { return m_mouse_x; }
 	unsigned get_mouse_y() const { return m_mouse_y; }
@@ -94,7 +98,7 @@ public:
 	int get_scroll_y() const { return m_mouse_scroll_y; }
 	unsigned get_mouse_button() const { return m_mouse_btn; }
 	
-	SDL_Gamepad *get_gamepad(size_t idx) { return m_gamepads.at(idx).get(); }
+	SDL_Gamepad *get_gamepad(size_t idx);
 	
 	bool is_key_down(char key) const;
 	
@@ -102,10 +106,6 @@ public:
 	
 	std::string to_string() const;
 private:
-	std::vector<std::unique_ptr<SDL_Gamepad, decltype(&SDL_CloseGamepad)>> m_gamepads;
-	std::vector<std::pair<std::string, Binding>> m_bindings;
-
-	std::vector<char> m_keys;
 	unsigned m_mouse_x, m_mouse_y;
 	int m_mouse_dx, m_mouse_dy;
 	bool m_mouse_down;
