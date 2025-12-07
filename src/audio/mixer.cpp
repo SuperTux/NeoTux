@@ -139,15 +139,19 @@ Mixer::play_music(std::string filename)
 		m_music_data = {};
 	}
 
+	ma_sound new_music;
 	ma_result result;
 	result = ma_sound_init_from_file(&m_engine, FS::path(filename).c_str(),
-	                                 0, nullptr, nullptr, &m_music);
+	                                 MA_SOUND_FLAG_STREAM, nullptr, nullptr, &new_music);
 
 	if (result != MA_SUCCESS) {
 		throw std::runtime_error(std::format("Failed to load music {} (ma error: {})",
 		                                     FS::path(filename),
 		                                     (int)result));
 	}
+
+	ma_sound_uninit(&m_music);
+	m_music = new_music;
 
 	ma_data_source* music_source = ma_sound_get_data_source(&m_music);
 	ma_uint32 samplerate;

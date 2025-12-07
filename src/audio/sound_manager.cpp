@@ -33,7 +33,7 @@ ma_sound* SoundManager::load(const std::string& path)
 		auto new_it = m_sounds.insert({path, {}});
 		ma_sound* out = &new_it.first->second;
 		ma_sound_init_from_file(&g_mixer.m_engine, FS::path(path).c_str(),
-		                        0, nullptr, nullptr, out);
+		                        MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_ASYNC, nullptr, nullptr, out);
 		return out;
 	} else {
 		return &it->second;
