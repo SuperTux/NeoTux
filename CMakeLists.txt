@@ -7,10 +7,13 @@ set(NEOTUX_DATA_DIR "${CMAKE_BINARY_DIR}/data" CACHE PATH "Where NeoTux will loo
 
 if (NOT EXISTS "${NEOTUX_DATA_DIR}")
 	if ("${NEOTUX_DATA_DIR}" STREQUAL "${CMAKE_BINARY_DIR}/data")
-		message(ERROR "No compiled data directory found. Did you run the script?")
+		message("No compiled data directory found. Did you run the script?")
 	else()
-		message(ERROR "Your specified data directory doesn't exist. Is it placed?")
+		message("Your specified data directory doesn't exist. Is it placed?")
 	endif()
+	
+	# Realy dumb... whatever
+	file(COPY "${CMAKE_SOURCE_DIR}/data" DESTINATION "${CMAKE_BINARY_DIR}")
 endif()
 
 # TODO: my module function
@@ -37,12 +40,6 @@ FetchContent_MakeAvailable(sfsexp)
 include("${PROJECT_SOURCE_DIR}/cmake/sfsexp.cmake")
 
 option(NEOTUX_USE_MIXER "Build with SDL3 Mixer support." ON)
-if (PSP)
-	message(STATUS "Building PSP version...")
-	set(NEOTUX_USE_MIXER OFF)
-	set(NEOTUX_PSP ON)
-	set(NEOTUX_DATA_DIR "data")
-endif()
 
 if (NEOTUX_USE_MIXER)
 	message(STATUS "Using SDL3 Mixer...")
@@ -146,27 +143,15 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 	endif()
 endif()
 
-
-if (PSP)
-	get_target_property(compile_defs NeoTux COMPILE_DEFINITIONS)
-	message(status "Its ${compile_defs}")
-	#string(REPLACE "-pthread" "" NEW_OPTS "${CURRENT_OPTS}")
-	set_target_properties(NeoTux PROPERTIES LINK_OPTIONS "")
-	
-	create_pbp_file(
-		TARGET NeoTux
-		ICON_PATH ${PROJECT_SOURCE_DIR}/data/images/engine/pspicon0.png
-		BACKGROUND_PATH ${PROJECT_SOURCE_DIR}/data/images/engine/psppic1.png
-		PREVIEW_PATH NULL
-		TITLE NeoTux
-		VERSION 01.00
-	)
-endif()
-
+include(cmake/psp.cmake)
 message(STATUS "Data dir: ${NEOTUX_DATA_DIR}")
 
 configure_file(config.h.in ${PROJECT_BINARY_DIR}/config.h)
 target_include_directories(NeoTux PRIVATE ${PROJECT_BINARY_DIR})
+
+add_custom_command(TARGET NeoTux POST_BUILD
+	COMMAND ${CMAKE_SOURCE_DIR}/scripts/convert2spritesheet.pl
+	ARGS --src="${CMAKE_SOURCE_DIR}/data" --dest="${NEOTUX_DATA_DIR}" --quiet --summary)
 
 # TODO: change this to neotux
 set_target_properties(NeoTux PROPERTIES OUTPUT_NAME supertux3)

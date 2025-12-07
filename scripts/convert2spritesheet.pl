@@ -31,6 +31,11 @@ my $MAX_H = undef;
 my $quality = 9;
 my $scale = 1.0;
 my $split_sprites = undef;
+my $quiet = 0;
+my $summary = 0;
+
+my $total_img = 0;
+my $total_sprites = 0;
 
 sub helpme
 {
@@ -42,7 +47,9 @@ sub helpme
   --max-height <height>        Optionally provide a texture height (default: unset)
   --quality <quality>          Texture quality (PNG: 0-9)
   --scale <amount>             Scale each texture by this amount (default: 1.0)
-  --split-sprites              Split spritesheets into multiple files (requires: max-width, max-height)";
+  --split-sprites              Split spritesheets into multiple files (requires: max-width, max-height)
+  --quiet                      Doesn't print a message for each written file
+  --summary                    Prints a summary at the end";
 }
 
 GetOptions('src=s' => \$src,
@@ -52,6 +59,8 @@ GetOptions('src=s' => \$src,
 		   'quality=i' => \$quality,
 		   'scale=f' => \$scale,
 		   'split-sprites' => sub { $split_sprites = 1; },
+		   'quiet' => sub { $quiet = 1; },
+		   'summary' => sub { $summary = 1; },
 		   'help' => sub { printf helpme . "\n"; exit(); }) or die(helpme);
 
 die "Must set both --max-width and --max-height if using --split-sprites.\n".helpme."\n" if $split_sprites && !$MAX_H;
@@ -134,7 +143,8 @@ sub parse_sprite_data
 					$spritesheet_idx += 1;
 					$image->Scale(width => $w * $scale, height => $h * $scale) if $scale != 1.0;
 					$image->Write(dest_dir($dir) . "/" . $fn);
-					print "Writing ".dest_dir($dir)."/$fn\n";
+					print "Writing ".dest_dir($dir)."/$fn\n" unless $quiet;
+					$total_img++;
 					$fn = $name."_spritesheet$spritesheet_idx.png";
 					$spritesheet_sexp .= "$fn ";
 				}
@@ -162,7 +172,6 @@ sub parse_sprite_data
 
 				# For the next image...
 				$curr_x += $w;
-
 			}
 			
 			$sexp .= sprintf("\t\t\t    (%d %d %d %d %d)\n",
@@ -182,14 +191,15 @@ sub parse_sprite_data
 	File::Path::make_path(dest_dir($dir).'/');
 
 	open my $fh, '>', dest_dir($dir).'/'.$name."_sheet.sprite" or die "Could not open sprite";
+	print "Writing ".dest_dir($dir).'/'.$name."_sheet.sprite\n" unless $quiet;
+	$total_sprites++;
 	print $fh $sexp;
-	print "Writing ".dest_dir($dir).'/'.$name."_sheet.sprite\n";
-	
 	
 	my ($w, $h) = $image->Get('width', 'height');
 	$image->Scale(width => $w * $scale, height => $h * $scale) if $scale != 1.0;
 	$image->Write(dest_dir($dir) . "/".$name."_spritesheet$spritesheet_idx.png");
-	print "Writing ".dest_dir($dir).'/'.$name."_spritesheet$spritesheet_idx.png\n";
+	$total_img++;
+	print "Writing ".dest_dir($dir).'/'.$name."_spritesheet$spritesheet_idx.png\n" unless $quiet;
 }
 
 sub parse_sprite
@@ -285,3 +295,4 @@ find(sub {
 	}
 }, $src);
 
+print "Wrote textures to: $dest\nTotal sprite files: $total_sprites\nTotal images: $total_img ;-)\n" if $summary;
