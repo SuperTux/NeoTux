@@ -14,15 +14,15 @@
 //  You should have received a copy of the GNU General Public License 
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <SDL3/SDL_gamepad.h>
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_events.h>
 #include "input_manager.hpp"
 #include "sdl_exception.hpp"
 #include "util/filesystem.hpp"
 #include "util/logger.hpp"
-#include <SDL3/SDL_gamepad.h>
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_events.h>
 #include <format>
-#include <iostream>
+#include <vector>
 
 InputManager g_input_manager;
 
@@ -34,6 +34,13 @@ size_t UP_BINDING;
 size_t DOWN_BINDING;
 size_t ZOOMIN_BINDING;
 size_t ZOOMOUT_BINDING;
+
+struct InputManager::_impl
+{
+	std::vector<std::unique_ptr<SDL_Gamepad, decltype(&SDL_CloseGamepad)>> gamepads;
+	std::vector<std::pair<std::string, Binding>> bindings;
+	std::vector<char> keys;
+};
 
 void
 InputManager::define_game_default_mappings()
@@ -63,6 +70,7 @@ InputManager::define_game_default_mappings()
 }
 
 InputManager::InputManager() :
+	impl(std::make_unique<InputManager::_impl>()),
 	m_mouse_x(),
 	m_mouse_y(),
 	m_mouse_dx(),
@@ -91,13 +99,13 @@ InputManager::load_gamepads()
 	while (--count >= 0)
 	{
 		SDL_Gamepad *tmp;
-		for (auto &pad : m_gamepads)
+		for (auto &pad : impl->gamepads)
 		{
 			if (SDL_GetGamepadID(pad.get()) == gamepads[count])
 				goto gamepad_exists;
 		}
 		tmp = SDL_OpenGamepad(gamepads[count]);
-		m_gamepads.emplace_back(tmp, SDL_CloseGamepad);
+		impl->gamepads.emplace_back(tmp, SDL_CloseGamepad);
 gamepad_exists:
 		continue;
 	}
@@ -106,7 +114,7 @@ gamepad_exists:
 bool
 InputManager::register_gamepad_by_id(int id)
 {
-	for (auto &pad : m_gamepads)
+	for (auto &pad : impl->gamepads)
 	{
 		if (SDL_GetGamepadID(pad.get()) == id)
 		{
@@ -116,29 +124,53 @@ InputManager::register_gamepad_by_id(int id)
 	}
 
 	Logger::info("Gamepad detected!");	
-	m_gamepads.emplace_back(SDL_OpenGamepad(id), SDL_CloseGamepad);
+	impl->gamepads.emplace_back(SDL_OpenGamepad(id), SDL_CloseGamepad);
 	return true;
 }
 
 void
 InputManager::unregister_gamepad(int id)
 {
-	for (auto it = m_gamepads.begin(); it != m_gamepads.end(); ++it)
+	for (auto it = impl->gamepads.begin(); it != impl->gamepads.end(); ++it)
 	{
 		if (SDL_GetGamepadID(it->get()) == id)
 		{
 			Logger::info("Unregistering gamepad...");
-			m_gamepads.erase(it);
+			impl->gamepads.erase(it);
 			return;
 		}
 	}
 }
 
+bool
+InputManager::mapping_pressed(size_t id) const
+{
+	return impl->bindings[id].second.pressed;
+}
+
+Binding&
+InputManager::mapping_at(size_t id)
+{
+	return impl->bindings[id].second;
+}
+
+size_t
+InputManager::total_mappings() const
+{
+	return impl->bindings.size();
+}
+
+SDL_Gamepad*
+InputManager::get_gamepad(size_t idx)
+{
+	return impl->gamepads.at(idx).get();
+}
+
 size_t
 InputManager::define_mapping(std::string name, Binding binding)
 {
-	m_bindings.emplace_back(std::move(name), std::move(binding));
-	return m_bindings.size()-1;
+	impl->bindings.emplace_back(std::move(name), std::move(binding));
+	return impl->bindings.size()-1;
 }
 
 void
@@ -175,7 +207,7 @@ InputManager::handle_event(const SDL_Event &ev)
 			break;
 		case SDL_EVENT_GAMEPAD_BUTTON_DOWN: {
 			int btn = ev.gbutton.button;
-			for (auto &pair : m_bindings)
+			for (auto &pair : impl->bindings)
 			{
 				auto &binding = pair.second;
 				if (binding.is_gamepad())
@@ -190,7 +222,7 @@ InputManager::handle_event(const SDL_Event &ev)
 			break;
 		case SDL_EVENT_GAMEPAD_BUTTON_UP: {
 			int btn = ev.gbutton.button;
-			for (auto &pair : m_bindings)
+			for (auto &pair : impl->bindings)
 			{
 				auto &binding = pair.second;
 				if (binding.is_gamepad())
@@ -205,8 +237,8 @@ InputManager::handle_event(const SDL_Event &ev)
 			break;
 		case SDL_EVENT_KEY_DOWN: {
 			char key = SDL_SCANCODE_TO_KEYCODE(ev.key.key);
-			m_keys.push_back(key);
-			for (auto &pair : m_bindings)
+			impl->keys.push_back(key);
+			for (auto &pair : impl->bindings)
 			{
 				auto &binding = pair.second;
 				if (binding.is_keyboard())
@@ -223,8 +255,8 @@ InputManager::handle_event(const SDL_Event &ev)
 			break;
 		case SDL_EVENT_KEY_UP: {
 			char key = SDL_SCANCODE_TO_KEYCODE(ev.key.key);
-			auto it = m_keys.erase(std::remove(m_keys.begin(), m_keys.end(), key), m_keys.end());
-			for (auto &pair : m_bindings)
+			auto it = impl->keys.erase(std::remove(impl->keys.begin(), impl->keys.end(), key), impl->keys.end());
+			for (auto &pair : impl->bindings)
 			{
 				auto &binding = pair.second;
 				if (binding.is_keyboard())
@@ -247,7 +279,7 @@ InputManager::handle_event(const SDL_Event &ev)
 bool
 InputManager::is_key_down(char key) const
 {
-	return std::find(m_keys.begin(), m_keys.end(), key) != m_keys.end();
+	return std::find(impl->keys.begin(), impl->keys.end(), key) != impl->keys.end();
 }
 
 void
