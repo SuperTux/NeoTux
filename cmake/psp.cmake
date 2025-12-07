@@ -3,9 +3,9 @@ if (PSP)
 	set(NEOTUX_USE_MIXER OFF)
 	set(NEOTUX_PSP ON)
 	set(NEOTUX_DATA_DIR "data")
+	list(APPEND extra_convert_cmds "--quality=12" "--max-width=512" "--max-height=512" "--split-sprites")
 
 	get_target_property(compile_defs NeoTux COMPILE_DEFINITIONS)
-	message(status "Its ${compile_defs}")
 	#string(REPLACE "-pthread" "" NEW_OPTS "${CURRENT_OPTS}")
 	set_target_properties(NeoTux PROPERTIES LINK_OPTIONS "")
 	

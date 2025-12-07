@@ -143,6 +143,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 	endif()
 endif()
 
+set(extra_convert_cmds "")
 include(cmake/psp.cmake)
 message(STATUS "Data dir: ${NEOTUX_DATA_DIR}")
 
@@ -151,7 +152,7 @@ target_include_directories(NeoTux PRIVATE ${PROJECT_BINARY_DIR})
 
 add_custom_command(TARGET NeoTux POST_BUILD
 	COMMAND ${CMAKE_SOURCE_DIR}/scripts/convert2spritesheet.pl
-	ARGS --src="${CMAKE_SOURCE_DIR}/data" --dest="${NEOTUX_DATA_DIR}" --quiet --summary)
+	ARGS --src="${CMAKE_SOURCE_DIR}/data" --dest="${NEOTUX_DATA_DIR}" --quiet --summary ${extra_convert_cmds})
 
 # TODO: change this to neotux
 set_target_properties(NeoTux PROPERTIES OUTPUT_NAME supertux3)
