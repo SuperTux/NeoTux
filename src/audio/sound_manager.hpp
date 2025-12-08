@@ -16,8 +16,7 @@
 #ifndef SUPERTUX_SRC_AUDIO_SOUND_MANAGER
 #define SUPERTUX_SRC_AUDIO_SOUND_MANAGER
 
-#include <string>
-#include <unordered_map>
+#include <memory>
 
 #include <miniaudio.h>
 
@@ -29,7 +28,8 @@ public:
 	ma_sound* load(const std::string& path);
 
 private:
-	std::unordered_map<std::string, ma_sound> m_sounds;
+	struct Impl;
+	std::unique_ptr<Impl> impl;
 };
 
 extern SoundManager g_sound_manager;

@@ -13,26 +13,34 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#include "sound_manager.hpp"
 
+#include <string>
+#include <unordered_map>
+
+#include "sound_manager.hpp"
 #include "audio/mixer.hpp"
 #include "util/filesystem.hpp"
 
+struct SoundManager::Impl {
+	std::unordered_map<std::string, ma_sound> sounds;
+};
+
 SoundManager g_sound_manager;
 
-SoundManager::SoundManager()
+SoundManager::SoundManager():
+    impl(std::make_unique<Impl>())
 {
-
 }
 
-ma_sound* SoundManager::load(const std::string& path)
+ma_sound*
+SoundManager::load(const std::string& path)
 {
-	auto it = m_sounds.find(path);
-	if (it == m_sounds.end())
+	auto it = impl->sounds.find(path);
+	if (it == impl->sounds.end())
 	{
-		auto new_it = m_sounds.insert({path, {}});
+		auto new_it = impl->sounds.insert({path, {}});
 		ma_sound* out = &new_it.first->second;
-		ma_sound_init_from_file(&g_mixer.m_engine, FS::path(path).c_str(),
+		ma_sound_init_from_file(g_mixer.engine(), FS::path(path).c_str(),
 		                        MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_ASYNC, nullptr, nullptr, out);
 		return out;
 	} else {
