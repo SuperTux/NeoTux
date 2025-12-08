@@ -20,7 +20,8 @@ MusicReader::MusicReader()
 
 }
 
-MusicData MusicReader::open(const std::string& filename)
+MusicData
+MusicReader::open(const std::string& filename)
 {
 	SexpElt root;
 	MusicData out;
