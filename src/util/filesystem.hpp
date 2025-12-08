@@ -23,6 +23,7 @@ namespace FS
 {
 	std::string path(const std::string &file);
 	std::string parent_dir(const std::string &file);
+	std::string join(const std::string &a, const std::string& b);
 }
 
 #endif

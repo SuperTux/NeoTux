@@ -32,7 +32,7 @@ PlatformingTest::run()
 	g_rtcontext.width = winsize.width;
 	g_rtcontext.height = winsize.height;
 	
-	g_mixer.play_music("music/antarctic/chipdisko.ogg");
+	g_mixer.play_music("music/antarctic/chipdisko.music");
 	
 	g_tiles_reader.open();	
 	
