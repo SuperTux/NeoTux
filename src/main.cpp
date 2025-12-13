@@ -15,91 +15,100 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SDL3/SDL_messagebox.h>
+#include <unistd.h>
+
 #include <exception>
 #include <format>
-#include <stdexcept>
-#include <string>
+#include <functional>
 #include <iomanip>
 #include <iostream>
-#include <functional>
-#include <unistd.h>
+#include <stdexcept>
+#include <string>
 #include <variant>
+
 #include "config.h"
 #include "util/logger.hpp"
 #ifdef NEOTUX_BGFX
 #include "video/bgfx/bgfx_video_system.hpp"
 #endif
+#include "all_tests.hpp"
+#include "game.hpp"
+#include "settings.hpp"
 #include "video/sdl/window.hpp"
 #include "video/video_system.hpp"
-#include "settings.hpp"
-#include "game.hpp"
-#include "all_tests.hpp"
 
 #ifdef NEOTUX_PSP
-#include <pspkernel.h>
 #include <pspdebug.h>
+#include <pspkernel.h>
 
 PSP_MODULE_INFO("NEOTUX", 0, 1, 0);
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
-int exit_callback(int arg1, int arg2, void *common)
+int
+exit_callback(int arg1, int arg2, void *common)
 {
 	g_game->m_quit = true;
 	return 0;
 }
 
-int callback_thread(SceSize args, void *argp) {
-    int cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
-    sceKernelRegisterExitCallback(cbid);
-    sceKernelSleepThreadCB();
-    return 0;
+int
+callback_thread(SceSize args, void *argp)
+{
+	int cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
+	sceKernelRegisterExitCallback(cbid);
+	sceKernelSleepThreadCB();
+	return 0;
 }
 
-int setup_callbacks(void) {
-    int thid = sceKernelCreateThread("update_thread", callback_thread, 0x11, 0xFA0, 0, 0);
-    if(thid >= 0)
-        sceKernelStartThread(thid, 0, 0);
-    return thid;
+int
+setup_callbacks(void)
+{
+	int thid = sceKernelCreateThread("update_thread", callback_thread, 0x11, 0xFA0, 0, 0);
+	if (thid >= 0)
+		sceKernelStartThread(thid, 0, 0);
+	return thid;
 }
 
 #endif
 
 using namespace std::string_literals;
 
-void print_help(std::ostream& cout, int, char**, struct Argument*, int opt_width = 30);
+void print_help(std::ostream &cout, int, char **, struct Argument *, int opt_width = 30);
 
 static bool plz_continue = true;
 
-struct Argument {
-	Argument() :
-		longarg(nullptr),
-		shortarg(0),
-		desc(nullptr),
-		paramhint(nullptr)
-	{}
-	
-	Argument(const char* title) :
-		longarg(nullptr),
-		shortarg(0),
-		desc(title),
-		paramhint(nullptr)
-	{}
+struct Argument
+{
+	Argument()
+	    : longarg(nullptr)
+	    , shortarg(0)
+	    , desc(nullptr)
+	    , paramhint(nullptr)
+	{
+	}
 
-	Argument(const char* longarg_,
-	         char shortarg_,
-	         const char* desc_,
-	         const char* paramhint_ = nullptr) :
-		longarg(longarg_),
-		shortarg(shortarg_),
-		desc(desc_),
-		paramhint(paramhint_)
-	{}
+	Argument(const char *title)
+	    : longarg(nullptr)
+	    , shortarg(0)
+	    , desc(title)
+	    , paramhint(nullptr)
+	{
+	}
+
+	Argument(const char *longarg_, char shortarg_, const char *desc_,
+	         const char *paramhint_ = nullptr)
+	    : longarg(longarg_)
+	    , shortarg(shortarg_)
+	    , desc(desc_)
+	    , paramhint(paramhint_)
+	{
+	}
 
 	/// You MUST provide a longarg if you provide a shortarg.
-	const char* longarg;
+	const char *longarg;
 	char shortarg;
-	const char* paramhint;
-	const char* desc;
+	const char *paramhint;
+	const char *desc;
 };
 
 Argument st_args[] = {
@@ -110,13 +119,13 @@ Argument st_args[] = {
 	{ "verbose", 'v', "Show verbose messages" },
 	{ "renderer", 'r',
 	  "Use specific renderer ('auto', 'opengl', 'opengles', 'vulkan', 'metal', 'sdl', 'null')",
-	  "<option>"},
-	
+	  "<option>" },
+
 	{ "In-Game Testing:" },
 	//////////////
 	{ "test", 't', "Run in-game test", "<name>" },
 	{ "list-tests", 'l', "List in-game tests" },
-	
+
 	{ "Debugging:" },
 	{ "aggressive-caching", 'C', "Cache more stuff before the game loop to prevent stutters" },
 	{ "forced-delay", 'F', "Add an intentional delay in MS to the game loop", "<ms>" },
@@ -125,61 +134,71 @@ Argument st_args[] = {
 	{}
 };
 
-bool check_arg(Argument& arg, char* argument)
+bool
+check_arg(Argument &arg, char *argument)
 {
 	// Note: Any method with a short argument requires a long argument
-	return "--"s+arg.longarg == argument || (arg.shortarg != 0 ? "-"s+arg.shortarg == argument : false);
+	return "--"s + arg.longarg == argument ||
+	       (arg.shortarg != 0 ? "-"s + arg.shortarg == argument : false);
 }
 
-int apply_argument(int argc, char** argv, int argvidx, Argument args[], int idx) {
-	switch (idx) {
-		case 1:
-			g_settings->show_help = true;
+int
+apply_argument(int argc, char **argv, int argvidx, Argument args[], int idx)
+{
+	switch (idx)
+	{
+	case 1:
+		g_settings->show_help = true;
+		return 1;
+
+	case 3:
+		g_settings->verbose = true;
+		return 0;
+
+	case 4:
+	{
+		if (argvidx - 1 >= argc)
 			return 1;
 
-		case 3:
-			g_settings->verbose = true;
-			return 0;
+		std::string renderer = argv[argvidx + 1];
+		g_settings->renderer = VideoSystem::str_to_video_system(renderer);
+		return 0;
+	}
 
-		case 4: {
-			if (argvidx - 1 >= argc)
-				return 1;
-
-			std::string renderer = argv[argvidx + 1];
-			g_settings->renderer = VideoSystem::str_to_video_system(renderer);
-			return 0;
-		}
-		
-		case 6: {
-			const char* name = argv[argvidx + 1];
-			if (!name)
-				return 1;
-			Game *game = GameTest::get_game_test(name);
-			if (!game)
-			{
-				std::cout << "Game test \"" << name << "\" not found!" << std::endl;
-				return 1;
-			}
-			g_game = std::unique_ptr<Game>(game);
-			return 0;
-		}
-		
-		case 7: {
-			std::cout << "List of all in-game tests:\n";
-			for (auto &test : g_game_tests)
-			{
-				std::cout << "  - " << test.first << "\n";
-			}
-			std::cout.flush();
+	case 6:
+	{
+		const char *name = argv[argvidx + 1];
+		if (!name)
+			return 1;
+		Game *game = GameTest::get_game_test(name);
+		if (!game)
+		{
+			std::cout << "Game test \"" << name << "\" not found!" << std::endl;
 			return 1;
 		}
-		
-		case 9:
-			g_settings->aggressive_caching++;
-			return 0;
-		
-		case 10: try {
-			long forced_delay =  std::stol(argv[argvidx + 1]);
+		g_game = std::unique_ptr<Game>(game);
+		return 0;
+	}
+
+	case 7:
+	{
+		std::cout << "List of all in-game tests:\n";
+		for (auto &test : g_game_tests)
+		{
+			std::cout << "  - " << test.first << "\n";
+		}
+		std::cout.flush();
+		return 1;
+	}
+
+	case 9:
+		g_settings->aggressive_caching++;
+		return 0;
+
+	case 10:
+		try
+		{
+			long forced_delay = std::stol(argv[argvidx + 1]);
 			if (forced_delay < 0)
 			{
 				std::cerr << "Forced delay must be positive" << std::endl;
@@ -187,37 +206,38 @@ int apply_argument(int argc, char** argv, int argvidx, Argument args[], int idx)
 			}
 			if (forced_delay > 5000)
 			{
-				std::cerr << "Forced delay should be a reasonable number (below 5000ms)" << std::endl;
+				std::cerr << "Forced delay should be a reasonable number (below 5000ms)"
+				          << std::endl;
 				return 1;
 			}
 			g_settings->forced_delay = forced_delay;
 			std::cout << "Using forced delay: " << g_settings->forced_delay << std::endl;
 			return 0;
-		}
-		catch (...) {
+		} catch (...)
+		{
 			std::cerr << "Forced delay must be a number." << std::endl;
 			return 1;
 		}
-		
-		case 11:
-			g_settings->show_hitboxes = true;
-			return 0;
-		
-		case 12:
-			const char *number = argv[argvidx + 1];
-			if (!number)
-				return 1;
-			std::istringstream iss(number);
-			iss.imbue(std::locale::classic());
-			double result;
-			iss >> result;
-			if (result == 0.0 || result < 0.0)
-			{
-				std::cerr << "Result must be a number larger than 0." << std::endl;
-				return 1;
-			}
-			g_settings->speed = result;
-			return 0;
+
+	case 11:
+		g_settings->show_hitboxes = true;
+		return 0;
+
+	case 12:
+		const char *number = argv[argvidx + 1];
+		if (!number)
+			return 1;
+		std::istringstream iss(number);
+		iss.imbue(std::locale::classic());
+		double result;
+		iss >> result;
+		if (result == 0.0 || result < 0.0)
+		{
+			std::cerr << "Result must be a number larger than 0." << std::endl;
+			return 1;
+		}
+		g_settings->speed = result;
+		return 0;
 	}
 
 	return -1;
@@ -231,15 +251,17 @@ int apply_argument(int argc, char** argv, int argvidx, Argument args[], int idx)
  * @param args Array of Arguments. Last member of array must have
  *  arguments set to null terminated values for strings, 0 for chars,
  *  and std::monostate for the callback, or else you will loop forever.
- * @return -1 on an invalid argument, 0 on success, 1 if the callback of an argument executed successfully
+ * @return -1 on an invalid argument, 0 on success, 1 if the callback of an argument executed
+ * successfully
  */
-int parse_arguments(int argc, char** argv, Argument args[])
+int
+parse_arguments(int argc, char **argv, Argument args[])
 {
 	if (argc <= 1)
 		return 0;
 
 	bool invalid_argument = true;
-	int argv_idx = 1;
+	int argv_idx          = 1;
 	for (argv_idx = 1; argv_idx < argc; ++argv_idx)
 	{
 		for (int i = 0;; ++i)
@@ -262,33 +284,35 @@ int parse_arguments(int argc, char** argv, Argument args[])
 		if (invalid_argument)
 			break;
 	}
-	
+
 	if (invalid_argument)
 	{
 		std::cerr << std::format("Invalid argument \"{}\".", argv[argv_idx]) << "\n";
 		print_help(std::cerr, argc, argv, args);
 		return 1;
 	}
-	
+
 	return 0;
 }
 
-void print_help(std::ostream& cout, int argc, char** argv, Argument args[], int opt_width /*= 30*/)
+void
+print_help(std::ostream &cout, int argc, char **argv, Argument args[], int opt_width /*= 30*/)
 {
 	cout << std::left;
 	cout << std::format("Usage: {} [OPTIONS] [LEVELFILE]", argv[0]) << "\n";
 
 	for (int i = 0;; ++i)
 	{
-		bool is_header = args[i].paramhint == nullptr && args[i].longarg == nullptr && args[i].shortarg == 0;
+		bool is_header = args[i].paramhint == nullptr && args[i].longarg == nullptr &&
+		                 args[i].shortarg == 0;
 		if (args[i].longarg == nullptr && args[i].shortarg == 0 && args[i].desc == nullptr)
 			break;
 		else if (is_header)
 		{
 			cout << "\n" << args[i].desc;
-		
-		}	
-		else {
+
+		} else
+		{
 			std::string arg_str = "";
 			cout << "  ";
 			if (args[i].shortarg)
@@ -303,7 +327,7 @@ void print_help(std::ostream& cout, int argc, char** argv, Argument args[], int 
 		}
 		cout << "\n";
 	}
-	
+
 	cout.flush();
 	cout << std::resetiosflags(std::ios_base::left);
 }
@@ -311,49 +335,48 @@ void print_help(std::ostream& cout, int argc, char** argv, Argument args[], int 
 #ifdef NEOTUX_PSP
 extern "C"
 #endif
-int main(int argc, char** argv)
+    int
+    main(int argc, char **argv)
 {
-// TODO do this only for release builds
+	// TODO do this only for release builds
 	try
 	{
 #ifdef NEOTUX_PSP
-	setup_callbacks();
+		setup_callbacks();
 #endif
-	g_settings = std::make_unique<Settings>();
-	
-	GameTest::init_all_tests();
+		g_settings = std::make_unique<Settings>();
 
-	int result = parse_arguments(argc, argv, st_args);
+		GameTest::init_all_tests();
+
+		int result = parse_arguments(argc, argv, st_args);
 #ifndef NEOTUX_PSP
-	if (result != 0)
-		return result;
+		if (result != 0)
+			return result;
 
-	if (g_settings->show_help)
-	{
-		print_help(std::cout, argc, argv, st_args);
-		return 0;
-	}
-	
-	if (!plz_continue)
-		return 0;
+		if (g_settings->show_help)
+		{
+			print_help(std::cout, argc, argv, st_args);
+			return 0;
+		}
+
+		if (!plz_continue)
+			return 0;
 #endif
 
-	// g_game will be set if a game test was selected
+		// g_game will be set if a game test was selected
 #ifdef NEOTUX_PSP
-	g_game = std::unique_ptr<Game>(GameTest::get_game_test("retro"));
+		g_game = std::unique_ptr<Game>(GameTest::get_game_test("retro"));
 #else
-	if (g_game == nullptr)
-		g_game = std::make_unique<Game>();
+		if (g_game == nullptr)
+			g_game = std::make_unique<Game>();
 #endif
-	
-	g_game->run();
-	
-	g_game->shutdown();
-	}
-	catch (const std::exception& err)
+
+		g_game->run();
+
+		g_game->shutdown();
+	} catch (const std::exception &err)
 	{
-		SDL_ShowSimpleMessageBox(
-			SDL_MESSAGEBOX_ERROR, "Exception occured", err.what(), NULL);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Exception occured", err.what(), NULL);
 	}
 	return 0;
 }

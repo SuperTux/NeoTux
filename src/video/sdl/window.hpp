@@ -17,23 +17,25 @@
 #ifndef HEADER_SUPERTUX_VIDEO_SDL_WINDOW_HPP
 #define HEADER_SUPERTUX_VIDEO_SDL_WINDOW_HPP
 
-#include "../../types.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_video.h>
-#include <string>
-#include <memory>
+
 #include <iostream>
+#include <memory>
+#include <string>
+
+#include "../../types.hpp"
 class SDLWindow
 {
 public:
 	SDLWindow();
 	~SDLWindow();
-	
-	void set_title(const std::string& title);
-	void set_icon(const std::string& icon);
-	void create_window(u32 flags, const std::string& title);
-	
+
+	void set_title(const std::string &title);
+	void set_icon(const std::string &icon);
+	void create_window(u32 flags, const std::string &title);
+
 	std::unique_ptr<SDL_Window, decltype(&SDL_DestroyWindow)> m_sdl_window;
 };
 
-#endif // HEADER_SUPERTUX_VIDEO_SDL_WINDOW_HPP
+#endif  // HEADER_SUPERTUX_VIDEO_SDL_WINDOW_HPP

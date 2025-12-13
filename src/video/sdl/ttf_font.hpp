@@ -17,30 +17,35 @@
 #ifndef HEADER_SUPERTUX_VIDEO_TTF_FONT_HPP
 #define HEADER_SUPERTUX_VIDEO_TTF_FONT_HPP
 
+#include <SDL3_ttf/SDL_ttf.h>
+
+#include <memory>
 #include <stdexcept>
 #include <string_view>
-#include <memory>
-#include <SDL3_ttf/SDL_ttf.h>
 
 class TTFFont
 {
 public:
-	TTFFont(std::string_view filename, int font_size, float line_spacing = 1.0f, int shadow_size = 0, int border = 0);
-	TTFFont() : m_font{nullptr, &TTF_CloseFont} {}
+	TTFFont(std::string_view filename, int font_size, float line_spacing = 1.0f,
+	        int shadow_size = 0, int border = 0);
+	TTFFont()
+	    : m_font{ nullptr, &TTF_CloseFont }
+	{
+	}
 	~TTFFont() = default;
-	
-	SDL_Surface* render_text_solid(const std::string &msg, SDL_Color color);
-	
+
+	SDL_Surface *render_text_solid(const std::string &msg, SDL_Color color);
+
 	float get_line_spacing() const { return m_line_spacing; }
 	float get_height() const;
-	
+
 	float get_text_width(std::string_view text) const;
 	float get_text_height(std::string_view text) const;
-	
+
 	int get_shadow_size() const { return m_shadow_size; }
-	int get_border() const { return m_border; }	
-	
-	TTF_Font* get_ttf_font() const { return m_font.get(); }
+	int get_border() const { return m_border; }
+
+	TTF_Font *get_ttf_font() const { return m_font.get(); }
 
 private:
 	std::unique_ptr<TTF_Font, decltype(&TTF_CloseFont)> m_font;

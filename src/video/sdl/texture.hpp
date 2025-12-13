@@ -17,8 +17,10 @@
 #ifndef HEADER_SUPERTUX_VIDEO_SDL_TEXTURE_HPP
 #define HEADER_SUPERTUX_VIDEO_SDL_TEXTURE_HPP
 
-#include <memory>
 #include <SDL3/SDL_render.h>
+
+#include <memory>
+
 #include "math/size.hpp"
 #include "video/texture.hpp"
 
@@ -28,10 +30,12 @@ class SDLTexture : public Texture
 {
 public:
 	SDLTexture(std::string filename, bool as_surface = false);
-	SDLTexture(SDL_Surface * const surface, bool destroy_surface = false, bool store_surface = false);
+	SDLTexture(SDL_Surface *const surface, bool destroy_surface = false,
+	           bool store_surface = false);
 	~SDLTexture() = default;
-	
-	SDL_Texture * get_sdl_texture() { return m_sdl_texture.get(); }
+
+	SDL_Texture *get_sdl_texture() { return m_sdl_texture.get(); }
+
 private:
 	std::unique_ptr<SDL_Texture, decltype(&SDL_DestroyTexture)> m_sdl_texture;
 	// For blitting purposes, sometimes the sdl surface may be stored

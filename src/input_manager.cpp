@@ -1,28 +1,31 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "input_manager.hpp"
+
+#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_gamepad.h>
 #include <SDL3/SDL_init.h>
-#include <SDL3/SDL_events.h>
-#include "input_manager.hpp"
+
+#include <format>
+#include <vector>
+
 #include "sdl_exception.hpp"
 #include "util/filesystem.hpp"
 #include "util/logger.hpp"
-#include <format>
-#include <vector>
 
 InputManager g_input_manager;
 
@@ -45,57 +48,66 @@ struct InputManager::_impl
 void
 InputManager::define_game_default_mappings()
 {
-	LEFT_BINDING = g_input_manager.define_mapping("Left", Binding{
-		Binding::Key('a'), Binding::Gamepad(SDL_GAMEPAD_BUTTON_DPAD_LEFT)
-	});
-	RIGHT_BINDING = g_input_manager.define_mapping("Right", Binding{
-		Binding::Key('d'), Binding::Gamepad(SDL_GAMEPAD_BUTTON_DPAD_RIGHT)
-	});
-	UP_BINDING = g_input_manager.define_mapping("Up", Binding{
-		Binding::Key('w'), Binding::Gamepad(SDL_GAMEPAD_BUTTON_DPAD_UP)
-	});
-	DOWN_BINDING = g_input_manager.define_mapping("Down", Binding{
-		Binding::Key('s'), Binding::Gamepad(SDL_GAMEPAD_BUTTON_DPAD_DOWN)
-	});
-	JUMP_BINDING = g_input_manager.define_mapping("Jump", Binding{
-		Binding::Key('w'), Binding::Gamepad(SDL_GAMEPAD_BUTTON_SOUTH)
-	});
+	LEFT_BINDING = g_input_manager
+	                   .define_mapping("Left",
+	                                   Binding{ Binding::Key('a'),
+	                                            Binding::Gamepad(SDL_GAMEPAD_BUTTON_DPAD_LEFT) });
+	RIGHT_BINDING = g_input_manager
+	                    .define_mapping("Right",
+	                                    Binding{ Binding::Key('d'),
+	                                             Binding::Gamepad(SDL_GAMEPAD_BUTTON_DPAD_RIGHT) });
+	UP_BINDING   = g_input_manager.define_mapping("Up",
+	                                              Binding{
+                                                    Binding::Key('w'),
+                                                    Binding::Gamepad(SDL_GAMEPAD_BUTTON_DPAD_UP) });
+	DOWN_BINDING = g_input_manager
+	                   .define_mapping("Down",
+	                                   Binding{ Binding::Key('s'),
+	                                            Binding::Gamepad(SDL_GAMEPAD_BUTTON_DPAD_DOWN) });
+	JUMP_BINDING   = g_input_manager.define_mapping("Jump",
+	                                                Binding{
+                                                      Binding::Key('w'),
+                                                      Binding::Gamepad(SDL_GAMEPAD_BUTTON_SOUTH) });
 	CROUCH_BINDING = DOWN_BINDING;
-	ZOOMIN_BINDING = g_input_manager.define_mapping("Zoom-in", Binding{
-		Binding::Key('='), Binding::Gamepad(SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER)
-	});
-	ZOOMOUT_BINDING = g_input_manager.define_mapping("Zoom-out", Binding{
-		Binding::Key('-'), Binding::Gamepad(SDL_GAMEPAD_BUTTON_LEFT_SHOULDER)
-	});
+	ZOOMIN_BINDING = g_input_manager
+	                     .define_mapping("Zoom-in",
+	                                     Binding{
+	                                         Binding::Key('='),
+	                                         Binding::Gamepad(SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) });
+	ZOOMOUT_BINDING = g_input_manager
+	                      .define_mapping("Zoom-out",
+	                                      Binding{
+	                                          Binding::Key('-'),
+	                                          Binding::Gamepad(SDL_GAMEPAD_BUTTON_LEFT_SHOULDER) });
 }
 
-InputManager::InputManager() :
-	impl(std::make_unique<InputManager::_impl>()),
-	m_mouse_x(),
-	m_mouse_y(),
-	m_mouse_dx(),
-	m_mouse_dy(),
-	m_mouse_btn(),
-	m_mouse_down(),
-	m_mouse_scroll_x(),
-	m_mouse_scroll_y()
+InputManager::InputManager()
+    : impl(std::make_unique<InputManager::_impl>())
+    , m_mouse_x()
+    , m_mouse_y()
+    , m_mouse_dx()
+    , m_mouse_dy()
+    , m_mouse_btn()
+    , m_mouse_down()
+    , m_mouse_scroll_x()
+    , m_mouse_scroll_y()
 {
 	if (!SDL_Init(SDL_INIT_GAMEPAD))
 		throw SDLException("SDL_Init(SDL_INIT_GAMEPAD)");
-	
+
 	SDL_AddGamepadMappingsFromFile(FS::path("gamecontrollerdb.txt").c_str());
 }
 
 void
 InputManager::load_gamepads()
 {
-	std::unique_ptr<SDL_JoystickID, decltype(&SDL_free)> gamepads_store{nullptr, SDL_free};
+	std::unique_ptr<SDL_JoystickID, decltype(&SDL_free)> gamepads_store{ nullptr, SDL_free };
 	int count;
 	gamepads_store.reset(SDL_GetGamepads(&count));
 	SDL_JoystickID *gamepads = gamepads_store.get();
 	if (!count || gamepads == nullptr)
 		return;
-	
+
 	while (--count >= 0)
 	{
 		SDL_Gamepad *tmp;
@@ -106,7 +118,7 @@ InputManager::load_gamepads()
 		}
 		tmp = SDL_OpenGamepad(gamepads[count]);
 		impl->gamepads.emplace_back(tmp, SDL_CloseGamepad);
-gamepad_exists:
+	gamepad_exists:
 		continue;
 	}
 }
@@ -123,7 +135,7 @@ InputManager::register_gamepad_by_id(int id)
 		}
 	}
 
-	Logger::info("Gamepad detected!");	
+	Logger::info("Gamepad detected!");
 	impl->gamepads.emplace_back(SDL_OpenGamepad(id), SDL_CloseGamepad);
 	return true;
 }
@@ -148,7 +160,7 @@ InputManager::mapping_pressed(size_t id) const
 	return impl->bindings[id].second.pressed;
 }
 
-Binding&
+Binding &
 InputManager::mapping_at(size_t id)
 {
 	return impl->bindings[id].second;
@@ -160,7 +172,7 @@ InputManager::total_mappings() const
 	return impl->bindings.size();
 }
 
-SDL_Gamepad*
+SDL_Gamepad *
 InputManager::get_gamepad(size_t idx)
 {
 	return impl->gamepads.at(idx).get();
@@ -170,7 +182,7 @@ size_t
 InputManager::define_mapping(std::string name, Binding binding)
 {
 	impl->bindings.emplace_back(std::move(name), std::move(binding));
-	return impl->bindings.size()-1;
+	return impl->bindings.size() - 1;
 }
 
 void
@@ -178,101 +190,106 @@ InputManager::handle_event(const SDL_Event &ev)
 {
 	switch (ev.type)
 	{
-		case SDL_EVENT_MOUSE_MOTION:
-			m_mouse_x = ev.motion.x;
-			m_mouse_y = ev.motion.y;
-			m_mouse_dx = ev.motion.xrel;
-			m_mouse_dy = ev.motion.yrel;
-			break;
-		case SDL_EVENT_MOUSE_BUTTON_DOWN:
-			m_mouse_btn = ev.button.button;
-			m_mouse_down = true;
-			break;
-		case SDL_EVENT_MOUSE_BUTTON_UP:
-			m_mouse_btn = ev.button.button;
-			m_mouse_down = false;
-			break;
-		case SDL_EVENT_MOUSE_WHEEL:
-			m_mouse_scroll_x += ev.wheel.integer_y;
-			m_mouse_scroll_y += ev.wheel.integer_y;
-			break;
-		case SDL_EVENT_GAMEPAD_ADDED:
-			if (g_input_manager.register_gamepad_by_id(ev.gdevice.which))
+	case SDL_EVENT_MOUSE_MOTION:
+		m_mouse_x  = ev.motion.x;
+		m_mouse_y  = ev.motion.y;
+		m_mouse_dx = ev.motion.xrel;
+		m_mouse_dy = ev.motion.yrel;
+		break;
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		m_mouse_btn  = ev.button.button;
+		m_mouse_down = true;
+		break;
+	case SDL_EVENT_MOUSE_BUTTON_UP:
+		m_mouse_btn  = ev.button.button;
+		m_mouse_down = false;
+		break;
+	case SDL_EVENT_MOUSE_WHEEL:
+		m_mouse_scroll_x += ev.wheel.integer_y;
+		m_mouse_scroll_y += ev.wheel.integer_y;
+		break;
+	case SDL_EVENT_GAMEPAD_ADDED:
+		if (g_input_manager.register_gamepad_by_id(ev.gdevice.which))
+		{
+			SDL_RumbleGamepad(SDL_GetGamepadFromID(ev.gdevice.which), 0xFFFF, 0xFFFF, 300);
+		}
+		break;
+	case SDL_EVENT_GAMEPAD_REMOVED:
+		g_input_manager.unregister_gamepad(ev.gdevice.which);
+		break;
+	case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+	{
+		int btn = ev.gbutton.button;
+		for (auto &pair : impl->bindings)
+		{
+			auto &binding = pair.second;
+			if (binding.is_gamepad())
 			{
-				SDL_RumbleGamepad(SDL_GetGamepadFromID(ev.gdevice.which), 0xFFFF, 0xFFFF, 300);
-			}
-			break;
-		case SDL_EVENT_GAMEPAD_REMOVED:
-			g_input_manager.unregister_gamepad(ev.gdevice.which);
-			break;
-		case SDL_EVENT_GAMEPAD_BUTTON_DOWN: {
-			int btn = ev.gbutton.button;
-			for (auto &pair : impl->bindings)
-			{
-				auto &binding = pair.second;
-				if (binding.is_gamepad())
+				if (btn == binding.get_gamepad_button())
 				{
-					if (btn == binding.get_gamepad_button())
-					{
-						binding.pressed = true;
-					}
+					binding.pressed = true;
 				}
 			}
 		}
-			break;
-		case SDL_EVENT_GAMEPAD_BUTTON_UP: {
-			int btn = ev.gbutton.button;
-			for (auto &pair : impl->bindings)
+	}
+	break;
+	case SDL_EVENT_GAMEPAD_BUTTON_UP:
+	{
+		int btn = ev.gbutton.button;
+		for (auto &pair : impl->bindings)
+		{
+			auto &binding = pair.second;
+			if (binding.is_gamepad())
 			{
-				auto &binding = pair.second;
-				if (binding.is_gamepad())
+				if (btn == binding.get_gamepad_button())
 				{
-					if (btn == binding.get_gamepad_button())
-					{
-						binding.pressed = false;
-					}
+					binding.pressed = false;
 				}
 			}
 		}
-			break;
-		case SDL_EVENT_KEY_DOWN: {
-			char key = SDL_SCANCODE_TO_KEYCODE(ev.key.key);
-			impl->keys.push_back(key);
-			for (auto &pair : impl->bindings)
+	}
+	break;
+	case SDL_EVENT_KEY_DOWN:
+	{
+		char key = SDL_SCANCODE_TO_KEYCODE(ev.key.key);
+		impl->keys.push_back(key);
+		for (auto &pair : impl->bindings)
+		{
+			auto &binding = pair.second;
+			if (binding.is_keyboard())
 			{
-				auto &binding = pair.second;
-				if (binding.is_keyboard())
+				if ((key == binding.get_key()) &&
+				    (binding.ctrl() == ((ev.key.mod & SDL_KMOD_CTRL) != 0)) &&
+				    (binding.alt() == ((ev.key.mod & SDL_KMOD_ALT) != 0)))
 				{
-					if ((key == binding.get_key()) &&
-					    (binding.ctrl() == ((ev.key.mod & SDL_KMOD_CTRL) != 0)) &&
-						(binding.alt() == ((ev.key.mod & SDL_KMOD_ALT) != 0)))
-					{
-						binding.pressed = true;
-					}
+					binding.pressed = true;
 				}
 			}
 		}
-			break;
-		case SDL_EVENT_KEY_UP: {
-			char key = SDL_SCANCODE_TO_KEYCODE(ev.key.key);
-			auto it = impl->keys.erase(std::remove(impl->keys.begin(), impl->keys.end(), key), impl->keys.end());
-			for (auto &pair : impl->bindings)
+	}
+	break;
+	case SDL_EVENT_KEY_UP:
+	{
+		char key = SDL_SCANCODE_TO_KEYCODE(ev.key.key);
+		auto it  = impl->keys.erase(std::remove(impl->keys.begin(), impl->keys.end(), key),
+		                            impl->keys.end());
+		for (auto &pair : impl->bindings)
+		{
+			auto &binding = pair.second;
+			if (binding.is_keyboard())
 			{
-				auto &binding = pair.second;
-				if (binding.is_keyboard())
+				if ((key == binding.get_key()) &&
+				    (binding.ctrl() == ((ev.key.mod & SDL_KMOD_CTRL) != 0)) &&
+				    (binding.alt() == ((ev.key.mod & SDL_KMOD_ALT) != 0)))
 				{
-					if ((key == binding.get_key()) &&
-					    (binding.ctrl() == ((ev.key.mod & SDL_KMOD_CTRL) != 0)) &&
-						(binding.alt() == ((ev.key.mod & SDL_KMOD_ALT) != 0)))
-					{
-						binding.pressed = false;
-					}
+					binding.pressed = false;
 				}
 			}
 		}
-			break;
-		default:
-			break;
+	}
+	break;
+	default:
+		break;
 	}
 }
 
@@ -287,28 +304,22 @@ InputManager::reset()
 {
 	m_mouse_scroll_x = 0;
 	m_mouse_scroll_y = 0;
-	m_mouse_dx = 0;
-	m_mouse_dy = 0;
+	m_mouse_dx       = 0;
+	m_mouse_dy       = 0;
 }
 
 std::string
 InputManager::to_string() const
 {
 	return std::format(
-		"Mouse down: {}\n"
-		" Mouse btn: {}\n"
-		"         x: {}\n"
-		"         y: {}\n"
-		"   delta x: {}\n"
-		"   delta y: {}\n"
-		"  scroll x: {}\n"
-		"  scroll y: {}",
-		is_mouse_down(),
-		get_mouse_button(),
-		get_mouse_x(),
-		get_mouse_y(),
-		get_mouse_dx(),
-		get_mouse_dy(),
-		get_scroll_x(),
-		get_scroll_y());
+	    "Mouse down: {}\n"
+	    " Mouse btn: {}\n"
+	    "         x: {}\n"
+	    "         y: {}\n"
+	    "   delta x: {}\n"
+	    "   delta y: {}\n"
+	    "  scroll x: {}\n"
+	    "  scroll y: {}",
+	    is_mouse_down(), get_mouse_button(), get_mouse_x(), get_mouse_y(), get_mouse_dx(),
+	    get_mouse_dy(), get_scroll_x(), get_scroll_y());
 }

@@ -1,20 +1,25 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tilemap.hpp"
+
+#include <algorithm>
+#include <format>
+#include <stdexcept>
+
 #include "camera.hpp"
 #include "collision.hpp"
 #include "math/rect.hpp"
@@ -25,18 +30,14 @@
 #include "util/logger.hpp"
 #include "video/texture_manager.hpp"
 #include "video/video_system.hpp"
-#include <algorithm>
-#include <format>
-#include <stdexcept>
 
-Tilemap::Tilemap(SexpElt root) :
-	m_threads(std::make_shared<ThreadWorker>(1)),
-	m_tileset(std::make_shared<SurfaceBlitter>(Size{
-		(int)texture_size * TileChunk::CHUNK_SIZE,
-		(int)texture_size * TileChunk::CHUNK_SIZE})),
-	m_size(),
-	m_chunks(),
-	m_zpos()
+Tilemap::Tilemap(SexpElt root)
+    : m_threads(std::make_shared<ThreadWorker>(1))
+    , m_tileset(std::make_shared<SurfaceBlitter>(Size{
+          (int) texture_size * TileChunk::CHUNK_SIZE, (int) texture_size * TileChunk::CHUNK_SIZE }))
+    , m_size()
+    , m_chunks()
+    , m_zpos()
 {
 	SexpElt elt;
 	elt = root.find_car("width", 1);
@@ -48,22 +49,23 @@ Tilemap::Tilemap(SexpElt root) :
 	elt = root.find_car("z-pos", 1);
 	if (elt.next_inplace())
 		m_zpos = elt.get_int();
-	
+
 	elt = root.find_car("tiles", 1);
 	for (int i = 0; elt.next_inplace(); ++i)
 	{
 		long tile_id = elt.get_int();
 		//if (tile_id == 0)
 		//	continue;
-		int x = i % m_size.width;
-		int y = i / m_size.width;
-		int chunk_x = x / TileChunk::CHUNK_SIZE;
-		int chunk_y = y / TileChunk::CHUNK_SIZE;
-		int rel_x = x % TileChunk::CHUNK_SIZE;
-		int rel_y = y % TileChunk::CHUNK_SIZE;
+		int x        = i % m_size.width;
+		int y        = i / m_size.width;
+		int chunk_x  = x / TileChunk::CHUNK_SIZE;
+		int chunk_y  = y / TileChunk::CHUNK_SIZE;
+		int rel_x    = x % TileChunk::CHUNK_SIZE;
+		int rel_y    = y % TileChunk::CHUNK_SIZE;
 		TileChunk &t = m_chunks.get_or_create(chunk_x, chunk_y, TileChunk());
 		if (g_settings->aggressive_caching > 0)
-			try {
+			try
+			{
 				for (auto &image : g_tiles_reader.m_tiles.at(tile_id).info->images)
 				{
 					if (!image.empty())
@@ -72,37 +74,41 @@ Tilemap::Tilemap(SexpElt root) :
 						g_texture_manager.load("images/" + image, true);
 					}
 				}
-			} catch (const std::out_of_range&) {}
+			} catch (const std::out_of_range &)
+			{
+			}
 		t.set_tile(rel_x, rel_y, tile_id);
 		//t.get_tile(rel_x, rel_y).set_id(tile_id);
 	}
-	
-	Logger::debug(std::format("Tilemap info\n\t"
-	                          "Width: {}\n\t"
-							  "Height: {}\n\t"
-							  "z-pos: {}\n\t"
-							  "# of tiles: {}", m_size.width, m_size.height, m_zpos, 0));
+
+	Logger::
+	    debug(std::format("Tilemap info\n\t"
+	                      "Width: {}\n\t"
+	                      "Height: {}\n\t"
+	                      "z-pos: {}\n\t"
+	                      "# of tiles: {}",
+	                      m_size.width, m_size.height, m_zpos, 0));
 }
 
-Tile&
+Tile &
 Tilemap::get_tile(unsigned long x, unsigned long y)
 {
-	int chunk_x = x / TileChunk::CHUNK_SIZE;
-	int chunk_y = y / TileChunk::CHUNK_SIZE;
-	int rel_x = x % TileChunk::CHUNK_SIZE;
-	int rel_y = y % TileChunk::CHUNK_SIZE;
+	int chunk_x      = x / TileChunk::CHUNK_SIZE;
+	int chunk_y      = y / TileChunk::CHUNK_SIZE;
+	int rel_x        = x % TileChunk::CHUNK_SIZE;
+	int rel_y        = y % TileChunk::CHUNK_SIZE;
 	TileChunk *chunk = m_chunks.at(chunk_x, chunk_y);
 	if (!chunk)
-		return m_chunks.at(0,0)->get_tile(0,0);
+		return m_chunks.at(0, 0)->get_tile(0, 0);
 	return chunk->get_tile(rel_x, rel_y);
 }
 
 std::optional<std::vector<Collision::CollideInfo<float>>>
-Tilemap::try_object_collision(MovingObject& obj)
+Tilemap::try_object_collision(MovingObject &obj)
 {
 	std::vector<Collision::CollideInfo<float>> colvec;
 	Rectf obj_rect = obj.get_colbox();
-	
+
 	obj.m_on_slope = false;
 	obj.m_slope_normals.clear();
 	auto cols = Collision::get_chunk_collisions(obj_rect, 32.f);
@@ -113,56 +119,56 @@ Tilemap::try_object_collision(MovingObject& obj)
 			Tile &tile = get_tile(x, y);
 			if (tile.get_id() == 0)
 				continue;
-			try {
-			const TileMeta &meta = g_tiles_reader.m_tiles.at(tile.get_id());
-			if ((meta.attrs & TileMeta::SOLID) == 0 &&
-			    (meta.attrs & TileMeta::UNISOLID) == 0 &&
-				(meta.attrs & TileMeta::BRICK) == 0)
-				continue;
-			
-			Tile &tile_below = get_tile(x, y+1);
-			
-			if ((meta.attrs & TileMeta::SLOPE) == TileMeta::SLOPE)
+			try
 			{
-				// Slope collision
-				Vec2 lines[2];
-				bool success = Collision::get_line_from_slope_metas(meta.datas, lines);
-				Vec2 normal = Collision::get_normal_from_slope_metas(meta.datas);
-				obj.m_slope_normal = normal;
-				obj.m_slope_data = meta.datas;
-				obj.m_slope_normals.push_back(normal);
-				
-				lines[0] *= 32.f;
-				lines[1] *= 32.f;
-				lines[0].x += x*32;
-				lines[0].y += y*32;
-				lines[1].x += x*32;
-				lines[1].y += y*32;
-				// TODO: Move this to draw
-				if (g_settings->show_hitboxes)
-					g_video_system->get_painter()->draw_line(lines[0], lines[1], {255, 0, 0, 255});
-				obj.do_slope_collision(meta.datas, lines[0], lines[1]);
-			}
-			else {
-				// Tile collision
-				Rectf rrect{(float)(x*32), (float)(y*32), {32.f, 32.f}};
-				auto col = obj.do_collision(rrect);
-				if (col)
-					colvec.emplace_back(col);
-			}
-			}
-			catch (...)
+				const TileMeta &meta = g_tiles_reader.m_tiles.at(tile.get_id());
+				if ((meta.attrs & TileMeta::SOLID) == 0 && (meta.attrs & TileMeta::UNISOLID) == 0 &&
+				    (meta.attrs & TileMeta::BRICK) == 0)
+					continue;
+
+				Tile &tile_below = get_tile(x, y + 1);
+
+				if ((meta.attrs & TileMeta::SLOPE) == TileMeta::SLOPE)
+				{
+					// Slope collision
+					Vec2 lines[2];
+					bool success       = Collision::get_line_from_slope_metas(meta.datas, lines);
+					Vec2 normal        = Collision::get_normal_from_slope_metas(meta.datas);
+					obj.m_slope_normal = normal;
+					obj.m_slope_data   = meta.datas;
+					obj.m_slope_normals.push_back(normal);
+
+					lines[0] *= 32.f;
+					lines[1] *= 32.f;
+					lines[0].x += x * 32;
+					lines[0].y += y * 32;
+					lines[1].x += x * 32;
+					lines[1].y += y * 32;
+					// TODO: Move this to draw
+					if (g_settings->show_hitboxes)
+						g_video_system->get_painter()->draw_line(lines[0], lines[1],
+						                                         { 255, 0, 0, 255 });
+					obj.do_slope_collision(meta.datas, lines[0], lines[1]);
+				} else
+				{
+					// Tile collision
+					Rectf rrect{ (float) (x * 32), (float) (y * 32), { 32.f, 32.f } };
+					auto col = obj.do_collision(rrect);
+					if (col)
+						colvec.emplace_back(col);
+				}
+			} catch (...)
 			{
 				std::cout << "No: " << tile.get_id() << std::endl;
 			}
 		}
 	}
-	
+
 	if (!colvec.empty())
 	{
 		return std::make_optional<std::vector<Collision::CollideInfo<float>>>(std::move(colvec));
 	}
-	
+
 	return std::nullopt;
 }
 
@@ -172,24 +178,24 @@ Tilemap::draw(const ViewContext &camera)
 	Painter *painter = g_video_system->get_painter();
 	//double offset_x = (camera.width - (camera.width * camera.zoom)) / 2.0;
 
-	float invcam_x = camera.width / camera.zoom;
-	float invcam_y = camera.height / camera.zoom;
-	float offset_x = camera.x - (invcam_x - camera.width) / 2.0f;
-	float offset_y = camera.y - (invcam_y - camera.height) / 2.0f;
+	float invcam_x   = camera.width / camera.zoom;
+	float invcam_y   = camera.height / camera.zoom;
+	float offset_x   = camera.x - (invcam_x - camera.width) / 2.0f;
+	float offset_y   = camera.y - (invcam_y - camera.height) / 2.0f;
 	float chunk_size = 32.f * TileChunk::CHUNK_SIZE;
-	
+
 	float cam_tx = offset_x / chunk_size;
 	float cam_ty = offset_y / chunk_size;
 	float cam_tw = invcam_x / chunk_size;
 	float cam_th = invcam_y / chunk_size;
-	
+
 	for (int x = std::max<long>(0, cam_tx); x < cam_tx + cam_tw && x < m_size.width; ++x)
 	{
 		for (int y = std::max<long>(0, cam_ty); y < cam_ty + cam_th && y < m_size.height; ++y)
 		{
 			float rx = x * chunk_size;
 			float ry = y * chunk_size;
-			Rectf rrect{(float)rx, (float)ry, {chunk_size, chunk_size}};
+			Rectf rrect{ (float) rx, (float) ry, { chunk_size, chunk_size } };
 			TileChunk *chunk = m_chunks.at(x, y);
 			if (!chunk)
 				continue;
@@ -197,7 +203,9 @@ Tilemap::draw(const ViewContext &camera)
 			TextureRef chunk_tex = chunk->get_texture();
 			if (!chunk_tex)
 				continue;
-			Rectf srect{0, 0, {(float)chunk_tex->get_size().width, (float)chunk_tex->get_size().height}};
+			Rectf srect{
+				0, 0, { (float) chunk_tex->get_size().width, (float) chunk_tex->get_size().height }
+			};
 			painter->draw(chunk_tex, srect, rrect);
 #if 0
 			Tile &tile = get_tile(x, y);

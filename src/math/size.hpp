@@ -18,54 +18,55 @@
 #ifndef HEADER_SUPERTUX_MATH_SIZE_HPP
 #define HEADER_SUPERTUX_MATH_SIZE_HPP
 
-template <typename T>
+template<typename T>
 class Size_t
 {
 public:
-	Size_t() :
-		width(), height()
-	{}
-	
-	Size_t(T width, T height) :
-		width(width),
-		height(height)
-	{}
-	
-	explicit Size_t(const Size_t<float>& rhs) :
-		width(static_cast<int>(rhs.width)),
-		height(static_cast<int>(rhs.height))
-	{}
+	Size_t()
+	    : width()
+	    , height()
+	{
+	}
+
+	Size_t(T width, T height)
+	    : width(width)
+	    , height(height)
+	{
+	}
+
+	explicit Size_t(const Size_t<float> &rhs)
+	    : width(static_cast<int>(rhs.width))
+	    , height(static_cast<int>(rhs.height))
+	{
+	}
 
 #define operatorX(op, type, param, param_width, param_height) \
-	Size_t& operator op (type param) \
+	Size_t &operator op(type param) \
 	{ \
 		width op param_width; \
 		height op param_height; \
 		return *this; \
 	}
-	
+
 	operatorX(+=, T, inc, inc, inc)
-	operatorX(-=, T, dec, dec, dec)	
+	operatorX(-=, T, dec, dec, dec)
 	operatorX(*=, T, inc, inc, inc)
 	operatorX(/=, T, dec, dec, dec)
-	
-	operatorX(+=, const Size_t<T>&, rhs, rhs.width, rhs.height)
-	operatorX(-=, const Size_t<T>&, rhs, rhs.width, rhs.height)
-	operatorX(*=, const Size_t<T>&, rhs, rhs.width, rhs.height)
-	operatorX(/=, const Size_t<T>&, rhs, rhs.width, rhs.height)
+
+	operatorX(+=, const Size_t<T> &, rhs, rhs.width, rhs.height)
+	operatorX(-=, const Size_t<T> &, rhs, rhs.width, rhs.height)
+	operatorX(*=, const Size_t<T> &, rhs, rhs.width, rhs.height)
+	operatorX(/=, const Size_t<T> &, rhs, rhs.width, rhs.height)
 #undef operatorX
-	
-	bool is_valid() const
-	{
-		return width > static_cast<T>(0) && height > static_cast<T>(0);
-	}
-		
+
+	bool is_valid() const { return width > static_cast<T>(0) && height > static_cast<T>(0); }
+
 public:
 	T width;
 	T height;
 };
 
-using Size = Size_t<int>;
+using Size  = Size_t<int>;
 using Sizef = Size_t<float>;
 
-#endif // HEADER_SUPERTUX_MATH_SIZE_HPP
+#endif  // HEADER_SUPERTUX_MATH_SIZE_HPP

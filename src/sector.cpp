@@ -1,34 +1,36 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "sector.hpp"
+
+#include <cassert>
+
 #include "camera.hpp"
 #include "collision_system.hpp"
 #include "util/logger.hpp"
-#include <cassert>
 
-Sector::Sector(SexpElt root) :
-	m_objects(),
-	m_zero_tilemap(nullptr),
-	m_spawnpoint_x(0),
-	m_spawnpoint_y(0)
+Sector::Sector(SexpElt root)
+    : m_objects()
+    , m_zero_tilemap(nullptr)
+    , m_spawnpoint_x(0)
+    , m_spawnpoint_y(0)
 {
 	SexpElt elt, telt;
 	size_t zero_tilemap_idx = 0;
-	
+
 	while (root)
 	{
 		if (root.is_list())
@@ -40,17 +42,17 @@ Sector::Sector(SexpElt root) :
 				{
 					if (elt.is_list() && elt.get_list().get_value() == "_")
 						elt = elt.get_list().next();
-					
+
 					m_name = elt.get_value();
 					Logger::debug("Sector Name: " + m_name);
 				}
-			}
-			else if (elt.get_value() == "tilemap") {
+			} else if (elt.get_value() == "tilemap")
+			{
 				Logger::debug("Parsing tilemap");
 				Tilemap tm(elt);
 				// HACK: Insert zpos in order for now
-				long zpos = tm.get_zpos();
-				int i = 0;
+				long zpos   = tm.get_zpos();
+				int i       = 0;
 				bool placed = false;
 				for (i = 0; i < m_tilemaps.size(); ++i)
 				{
@@ -65,37 +67,35 @@ Sector::Sector(SexpElt root) :
 				}
 				if (!placed)
 					m_tilemaps.emplace_back(tm);
-				
+
 				if (tm.get_zpos() == 0)
 				{
 					// iterators/pointers become invalidated, so we get at this last
 					zero_tilemap_idx = i;
 				}
-			}
-			else if (elt.get_value() == "spawnpoint")
+			} else if (elt.get_value() == "spawnpoint")
 			{
 				long x = 0;
 				long y = 0;
-				telt = elt.find_car("x");
+				telt   = elt.find_car("x");
 				if (telt)
 					x = telt.next().get_int();
 				telt = elt.find_car("y");
 				if (telt)
 					y = telt.next().get_int();
-				
+
 				m_spawnpoint_x = x;
 				m_spawnpoint_y = y;
-			}
-			else {
+			} else
+			{
 				std::string obj_name = elt.get_value();
-				MovingObject *obj = static_cast<MovingObject*>(GameObject::create(elt));
+				MovingObject *obj    = static_cast<MovingObject *>(GameObject::create(elt));
 				add_object(obj);
 			}
-			
 		}
 		root.next_inplace();
 	}
-	
+
 	// Cache zero tilemap for update calls
 	m_zero_tilemap = &m_tilemaps[zero_tilemap_idx];
 	assert(m_zero_tilemap->get_zpos() == 0);
@@ -123,8 +123,7 @@ reloop:
 	{
 		MovingObject *obj = it->get();
 		obj->update(*this, *m_zero_tilemap);
-		if (obj->destroy_me() ||
-			obj->m_rect.top > m_zero_tilemap->get_size().height * 32)
+		if (obj->destroy_me() || obj->m_rect.top > m_zero_tilemap->get_size().height * 32)
 		{
 			m_objects.erase(it);
 			goto reloop;
@@ -140,25 +139,24 @@ Sector::draw()
 	{
 		object.draw(g_rtcontext);
 	}
-	
+
 	for (auto &object : m_objects)
 	{
 		object.get()->draw();
 	}
 }
 
-Tilemap*
+Tilemap *
 Sector::get_tilemap_by_zpos(long zpos)
 {
 	if (zpos == 0)
 		return m_zero_tilemap;
-	
+
 	for (Tilemap &tilemap : m_tilemaps)
 	{
 		if (tilemap.get_zpos() == zpos)
 			return &tilemap;
 	}
-	
+
 	return nullptr;
 }
-

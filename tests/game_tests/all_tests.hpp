@@ -1,38 +1,40 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef ALL_GAME_TESTS_HEADER
 #define ALL_GAME_TESTS_HEADER
 
-#include "game_test.hpp"
-#include "everything_test.hpp"
 #include "collision_test.hpp"
+#include "everything_test.hpp"
+#include "game_test.hpp"
 #include "gui_test.hpp"
 #include "milestone_1_test.hpp"
 #include "platforming_test.hpp"
 #include "raw_draw_test.hpp"
 
-namespace GameTest {
+namespace GameTest
+{
 
 /*
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * |||   PUT YOUR GAME TESTS HERE   |||
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
-static void init_all_tests()
+static void
+init_all_tests()
 {
 	register_game_test<EverythingTest>();
 	register_game_test<CollisionTest>();
@@ -41,8 +43,7 @@ static void init_all_tests()
 	register_game_test<GuiTest>();
 	register_game_test<RawDrawTest>();
 }
-	
-} // namespace GameTest
 
+}  // namespace GameTest
 
 #endif

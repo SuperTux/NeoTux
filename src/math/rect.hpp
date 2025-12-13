@@ -18,10 +18,12 @@
 #ifndef HEADER_SUPERTUX_MATH_RECT_HPP
 #define HEADER_SUPERTUX_MATH_RECT_HPP
 
+#include <SDL3/SDL_rect.h>
+
+#include <format>
 #include <ostream>
 #include <string>
-#include <format>
-#include <SDL3/SDL_rect.h>
+
 #include "size.hpp"
 
 enum RectSide
@@ -31,123 +33,106 @@ enum RectSide
 	RECT_TOP,
 	RECT_BOTTOM
 };
-	
 
-template <typename T>
+template<typename T>
 class Rect_t
 {
 public:
-	Rect_t() :
-		left(), top(), right(), bottom()
-	{}
-		
+	Rect_t()
+	    : left()
+	    , top()
+	    , right()
+	    , bottom()
+	{
+	}
+
 	static Rect_t<T> from_center(T center_x, T center_y, T width, T height)
 	{
-		return {
-			center_x - width / 2,
-			center_y - height / 2,
-			center_x + width / 2,
-			center_y + height / 2
-		};
+		return { center_x - width / 2, center_y - height / 2, center_x + width / 2,
+			     center_y + height / 2 };
 	}
-	
-	Rect_t<T>
-	from_alignment(double center_x, double center_y, T width, T height) const
+
+	Rect_t<T> from_alignment(double center_x, double center_y, T width, T height) const
 	{
 		// TODO make pt_x, pt_y account for width and height
 		T pt_x = get_width() * center_x;
 		T pt_y = get_height() * center_y;
-		
-		
-		return {
-			left + pt_x - width / 2,
-			top + pt_y - height / 2,
-			left + pt_x + width / 2,
-			top + pt_y + height / 2
-		};
+
+		return { left + pt_x - width / 2, top + pt_y - height / 2, left + pt_x + width / 2,
+			     top + pt_y + height / 2 };
 	}
-	
-	Rect_t(T left, T top, T right, T bottom) :
-		left(left), top(top), right(right), bottom(bottom)
-	{}
-	
-	Rect_t(T left, T top, const Size_t<T> &size) :
-		left(left),
-		top(top),
-		right(left + size.width),
-		bottom(top + size.height)
-	{}
-	
-	template <typename U>
-	Rect_t(const Rect_t<U> &r) :
-		left(r.left),
-		top(r.top),
-		right(r.right),
-		bottom(r.bottom)
+
+	Rect_t(T left, T top, T right, T bottom)
+	    : left(left)
+	    , top(top)
+	    , right(right)
+	    , bottom(bottom)
 	{
 	}
-	
-	template <typename U>
-	Rect_t(const Size_t<U> &size) :
-		left(0),
-		top(0),
-		right(size.width),
-		bottom(size.height)
+
+	Rect_t(T left, T top, const Size_t<T> &size)
+	    : left(left)
+	    , top(top)
+	    , right(left + size.width)
+	    , bottom(top + size.height)
 	{
 	}
-		
-	Rect_t(SDL_Rect rect) :
-		left(rect.x),
-		top(rect.y),
-		right(rect.x + rect.w),
-		bottom(rect.y + rect.h)
-	{}
-	
-	Rect_t(SDL_FRect frect) :
-		left(frect.x),
-		top(frect.y),
-		right(frect.x + frect.w),
-		bottom(frect.y + frect.h)
-	{}
-	
-	T get_width() const
+
+	template<typename U>
+	Rect_t(const Rect_t<U> &r)
+	    : left(r.left)
+	    , top(r.top)
+	    , right(r.right)
+	    , bottom(r.bottom)
 	{
-		return right - left;
 	}
-	T get_height() const
+
+	template<typename U>
+	Rect_t(const Size_t<U> &size)
+	    : left(0)
+	    , top(0)
+	    , right(size.width)
+	    , bottom(size.height)
 	{
-		return bottom - top;
 	}
-	
-	SDL_FRect to_sdl_frect()
+
+	Rect_t(SDL_Rect rect)
+	    : left(rect.x)
+	    , top(rect.y)
+	    , right(rect.x + rect.w)
+	    , bottom(rect.y + rect.h)
 	{
-		return { left, top, get_width(), get_height() };
 	}
-	
-	SDL_Rect to_sdl_rect()
+
+	Rect_t(SDL_FRect frect)
+	    : left(frect.x)
+	    , top(frect.y)
+	    , right(frect.x + frect.w)
+	    , bottom(frect.y + frect.h)
 	{
-		return { left, top, get_width(), get_height() };
 	}
-	
+
+	T get_width() const { return right - left; }
+	T get_height() const { return bottom - top; }
+
+	SDL_FRect to_sdl_frect() { return { left, top, get_width(), get_height() }; }
+
+	SDL_Rect to_sdl_rect() { return { left, top, get_width(), get_height() }; }
+
 	bool operator==(const Rect_t<T> &other) const
 	{
-		return left == other.left && top == other.top &&
-			right == other.right && bottom == other.bottom;
+		return left == other.left && top == other.top && right == other.right &&
+		       bottom == other.bottom;
 	}
-	
-	bool operator!=(const Rect_t<T> &other) const
-	{
-		return !operator==(other);
-	}
-	
+
+	bool operator!=(const Rect_t<T> &other) const { return !operator==(other); }
+
 	std::string to_string() const
 	{
-		return std::string("Rect(left: ") + std::to_string(left) +
-			", top: " + std::to_string(top) +
-			", right: " + std::to_string(right) +
-			", bottom: " + std::to_string(bottom) + ")";
+		return std::string("Rect(left: ") + std::to_string(left) + ", top: " + std::to_string(top) +
+		       ", right: " + std::to_string(right) + ", bottom: " + std::to_string(bottom) + ")";
 	}
-	
+
 public:
 	T left;
 	T top;
@@ -155,29 +140,30 @@ public:
 	T bottom;
 };
 
-template <typename T>
-std::ostream& operator<<(std::ostream& out, const Rect_t<T> rect)
+template<typename T>
+std::ostream &
+operator<<(std::ostream &out, const Rect_t<T> rect)
 {
 	out << rect.to_string();
 	return out;
 }
 
-using Rect = Rect_t<int>;
+using Rect  = Rect_t<int>;
 using Rectf = Rect_t<float>;
 
-template <>
+template<>
 struct std::hash<Rect>
 {
 	std::size_t operator()(const Rect &r) const
 	{
 		constexpr std::size_t GOLDEN_RATIO = 0x9e3779b9;
-		std::size_t hash = 0;
-		hash ^= std::hash<int>()(r.left)   + GOLDEN_RATIO + (hash<<6) + (hash>>2);
-		hash ^= std::hash<int>()(r.top)    + GOLDEN_RATIO + (hash<<6) + (hash>>2);
-		hash ^= std::hash<int>()(r.right)  + GOLDEN_RATIO + (hash<<6) + (hash>>2);
-		hash ^= std::hash<int>()(r.bottom) + GOLDEN_RATIO + (hash<<6) + (hash>>2);
+		std::size_t hash                   = 0;
+		hash ^= std::hash<int>()(r.left) + GOLDEN_RATIO + (hash << 6) + (hash >> 2);
+		hash ^= std::hash<int>()(r.top) + GOLDEN_RATIO + (hash << 6) + (hash >> 2);
+		hash ^= std::hash<int>()(r.right) + GOLDEN_RATIO + (hash << 6) + (hash >> 2);
+		hash ^= std::hash<int>()(r.bottom) + GOLDEN_RATIO + (hash << 6) + (hash >> 2);
 		return hash;
 	}
 };
 
-#endif // HEADER_SUPERTUX_MATH_RECT_HPP
+#endif  // HEADER_SUPERTUX_MATH_RECT_HPP

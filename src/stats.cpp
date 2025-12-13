@@ -1,25 +1,25 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "stats.hpp"
 
 Stats g_stats{};
 
-Stats::Stats() :
-	m_timer(1000, -1)
+Stats::Stats()
+    : m_timer(1000, -1)
 {
 	reset();
 }
@@ -31,7 +31,7 @@ Stats::reset(bool died /*= false*/, bool next_level /*= false*/)
 		--lives;
 	else if (!next_level)
 		lives = 3;
-		
+
 	if (!died && !next_level)
 		coins = 0;
 	time = 120;
@@ -46,8 +46,7 @@ Stats::bump_coins()
 		coins = 0;
 		++lives;
 		g_mixer.play_sound("sounds/retro/lifeup.wav");
-	}
-	else
+	} else
 		g_mixer.play_sound("sounds/retro/distro.wav");
 }
 
@@ -60,6 +59,6 @@ Stats::tick_timer()
 			if (lives > 0)
 				--lives;
 	}
-	
+
 	return time > 0;
 }
