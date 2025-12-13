@@ -1,31 +1,33 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <SDL3/SDL_render.h>
-#include "config.h"
-#include "camera.hpp"
 #include "painter.hpp"
+
+#include <SDL3/SDL_render.h>
+
+#include "camera.hpp"
+#include "config.h"
 #include "video/sdl/sdl_video_system.hpp"
 #include "video/sdl/texture.hpp"
 
-SDLPainter::SDLPainter(VideoSystem *video) :
-	Painter(),
-	m_video_system(video),
-	m_sdl_renderer(SDL_CreateRenderer(video->window.m_sdl_window.get(), NULL),
-		&SDL_DestroyRenderer)
+SDLPainter::SDLPainter(VideoSystem *video)
+    : Painter()
+    , m_video_system(video)
+    , m_sdl_renderer(SDL_CreateRenderer(video->window.m_sdl_window.get(), NULL),
+                     &SDL_DestroyRenderer)
 {
 	SDL_SetRenderDrawBlendMode(m_sdl_renderer.get(), SDL_BLENDMODE_BLEND);
 #ifdef NEOTUX_PSP
@@ -34,19 +36,16 @@ SDLPainter::SDLPainter(VideoSystem *video) :
 }
 
 void
-SDLPainter::draw(TextureRef texture,
-                 std::optional<Rectf> src,
-                 std::optional<Rectf> dest,
-                 Flip flip,
-				 float alpha)
+SDLPainter::draw(TextureRef texture, std::optional<Rectf> src, std::optional<Rectf> dest, Flip flip,
+                 float alpha)
 {
-	SDLTexture *sdltex = static_cast<SDLTexture*>(texture);
-	SDL_Texture *tex = sdltex->get_sdl_texture();
+	SDLTexture *sdltex = static_cast<SDLTexture *>(texture);
+	SDL_Texture *tex   = sdltex->get_sdl_texture();
 	float last_alpha;
-	
+
 	if (!in_camera_bounds(dest))
 		return;
-	
+
 	SDL_FRect src_sdl;
 	if (src)
 		src_sdl = src->to_sdl_frect();
@@ -61,8 +60,8 @@ SDLPainter::draw(TextureRef texture,
 		dest_sdl.y *= m_context->zoom;
 		dest_sdl.w *= m_context->zoom;
 		dest_sdl.h *= m_context->zoom;
-		
-		dest_sdl.x +=  (m_context->width - (m_context->width  * m_context->zoom)) / 2.0;
+
+		dest_sdl.x += (m_context->width - (m_context->width * m_context->zoom)) / 2.0;
 		dest_sdl.y += (m_context->height - (m_context->height * m_context->zoom)) / 2.0;
 	}
 	if (m_do_clip)
@@ -70,7 +69,7 @@ SDLPainter::draw(TextureRef texture,
 		dest_sdl.x -= m_clip.left;
 		dest_sdl.y -= m_clip.top;
 	}
-	
+
 	if (alpha != 1.0)
 	{
 		SDL_GetTextureAlphaModFloat(tex, &last_alpha);
@@ -78,13 +77,12 @@ SDLPainter::draw(TextureRef texture,
 	}
 	if (flip != FLIP_NONE)
 	{
-		SDL_RenderTextureRotated(m_sdl_renderer.get(), tex,
-		    src ? &src_sdl : NULL, dest ? &dest_sdl : NULL,
-		    0.0, NULL, (SDL_FlipMode)flip);
-	}
-	else {
-		SDL_RenderTexture(m_sdl_renderer.get(), tex,
-		    src ? &src_sdl : NULL, dest ? &dest_sdl : NULL);
+		SDL_RenderTextureRotated(m_sdl_renderer.get(), tex, src ? &src_sdl : NULL,
+		                         dest ? &dest_sdl : NULL, 0.0, NULL, (SDL_FlipMode) flip);
+	} else
+	{
+		SDL_RenderTexture(m_sdl_renderer.get(), tex, src ? &src_sdl : NULL,
+		                  dest ? &dest_sdl : NULL);
 	}
 	if (alpha != 1.0)
 		SDL_SetTextureAlphaModFloat(tex, last_alpha);
@@ -96,7 +94,7 @@ SDLPainter::draw_fill_rect(Rectf dest, SDL_Color color)
 {
 	if (!in_camera_bounds(dest))
 		return;
-	
+
 	SDL_FRect dest_sdl = dest.to_sdl_frect();
 	if (m_context)
 	{
@@ -108,7 +106,7 @@ SDLPainter::draw_fill_rect(Rectf dest, SDL_Color color)
 		dest_sdl.x -= m_clip.left;
 		dest_sdl.y -= m_clip.top;
 	}
-	
+
 	SDL_SetRenderDrawColor(m_sdl_renderer.get(), color.r, color.g, color.b, color.a);
 	SDL_RenderFillRect(m_sdl_renderer.get(), &dest_sdl);
 	bump_draw_count();
@@ -121,7 +119,7 @@ SDLPainter::draw_line(Vec2 l_start, Vec2 l_end, SDL_Color color)
 	{
 		l_start.x -= m_context->x;
 		l_start.y -= m_context->y;
-		
+
 		l_end.x -= m_context->x;
 		l_end.y -= m_context->y;
 	}
@@ -129,14 +127,12 @@ SDLPainter::draw_line(Vec2 l_start, Vec2 l_end, SDL_Color color)
 	{
 		l_start.x -= m_clip.left;
 		l_start.y -= m_clip.top;
-		
+
 		l_end.x -= m_clip.left;
 		l_end.y -= m_clip.top;
 	}
 	SDL_SetRenderDrawColor(m_sdl_renderer.get(), color.r, color.g, color.b, color.a);
-	SDL_RenderLine(m_sdl_renderer.get(),
-		l_start.x, l_start.y,
-		l_end.x, l_end.y);
+	SDL_RenderLine(m_sdl_renderer.get(), l_start.x, l_start.y, l_end.x, l_end.y);
 	bump_draw_count();
 }
 
@@ -145,7 +141,7 @@ SDLPainter::begin_clip(Rect clip)
 {
 	Painter::begin_clip(std::move(clip));
 	const SDL_Rect sdl_clip = m_clip.to_sdl_rect();
-	
+
 	SDL_SetRenderViewport(m_sdl_renderer.get(), &sdl_clip);
 }
 
@@ -155,7 +151,6 @@ SDLPainter::end_clip()
 	SDL_SetRenderViewport(m_sdl_renderer.get(), nullptr);
 	Painter::end_clip();
 }
-
 
 void
 SDLPainter::flip()
@@ -170,4 +165,3 @@ SDLPainter::clear()
 	SDL_SetRenderDrawColor(m_sdl_renderer.get(), 0, 0, 40, 255);
 	SDL_RenderClear(m_sdl_renderer.get());
 }
-

@@ -14,20 +14,22 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <format>
 #include "window.hpp"
-#include "sdl_exception.hpp"
+
 #include <SDL3_image/SDL_image.h>
+
+#include <format>
+
 #include "config.h"
+#include "sdl_exception.hpp"
 #include "util/filesystem.hpp"
 #include "util/logger.hpp"
 
-SDLWindow::SDLWindow() :
-	m_sdl_window{nullptr, SDL_DestroyWindow}
+SDLWindow::SDLWindow()
+    : m_sdl_window{ nullptr, SDL_DestroyWindow }
 {
 	if (SDL_Init(SDL_INIT_VIDEO) == false)
 		throw SDLException("SDL Failed to initialize");
-	
 }
 
 SDLWindow::~SDLWindow()
@@ -35,21 +37,21 @@ SDLWindow::~SDLWindow()
 }
 
 void
-SDLWindow::create_window(u32 flags, const std::string& title)
+SDLWindow::create_window(u32 flags, const std::string &title)
 {
 	m_sdl_window.reset(SDL_CreateWindow(title.c_str(), 800, 600, flags));
 #ifdef NEOTUX_PSP
 	SDL_SetWindowSize(m_sdl_window.get(), 480, 272);
 #endif
-	
+
 	set_icon(FS::path("images/engine/supertux-256x256.png"));
 }
 
 void
-SDLWindow::set_icon(const std::string& filename)
+SDLWindow::set_icon(const std::string &filename)
 {
 #ifndef NEOTUX_PSP
-	SDL_Surface* icon;
+	SDL_Surface *icon;
 	try
 	{
 		Logger::info(std::format("Loading {}", filename));
@@ -57,12 +59,13 @@ SDLWindow::set_icon(const std::string& filename)
 		if (SDL_SetWindowIcon(m_sdl_window.get(), icon) == false)
 			throw SDLException("SDL_SetWindowIcon");
 		SDL_DestroySurface(icon);
-	}
-	catch (const SDLException& err) {
+	} catch (const SDLException &err)
+	{
 		SDL_DestroySurface(icon);
 		// Ignore this specific error, not our problem
 		//std::cout << err.what() << "\n";
-		if (err.sdl_error == "wayland: cannot set icon; required xdg_toplevel_icon_v1 protocol not supported")
+		if (err.sdl_error ==
+		    "wayland: cannot set icon; required xdg_toplevel_icon_v1 protocol not supported")
 			return;
 		throw err;
 	}

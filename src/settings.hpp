@@ -22,21 +22,22 @@
 #include "config.h"
 #include "video/video_system.hpp"
 
-struct Settings {
-	bool show_help = false;
-	bool verbose = false;
+struct Settings
+{
+	bool show_help     = false;
+	bool verbose       = false;
 	bool show_hitboxes = false;
 	int aggressive_caching =
-#		ifdef NEOTUX_PSP
-			1;
-#		else
-			0;
-#		endif
-	double speed = 1.0;
-	int forced_delay = 0;
+#ifdef NEOTUX_PSP
+	    1;
+#else
+	    0;
+#endif
+	double speed                  = 1.0;
+	int forced_delay              = 0;
 	VideoSystem::Backend renderer = VideoSystem::VIDEO_AUTO;
 };
 
 extern std::unique_ptr<Settings> g_settings;
 
-#endif // HEADER_SUPERTUX_SETTINGS_HPP
+#endif  // HEADER_SUPERTUX_SETTINGS_HPP

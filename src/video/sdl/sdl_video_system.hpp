@@ -1,28 +1,30 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #ifndef HEADER_SUPERTUX_VIDEO_SDL_SDL_VIDEO_SYSTEM_HPP
 #define HEADER_SUPERTUX_VIDEO_SDL_SDL_VIDEO_SYSTEM_HPP
 
-#include <string>
-#include <vector>
-#include <string_view>
 #include <SDL3/SDL.h>
-#include "math/size.hpp"
+
+#include <string>
+#include <string_view>
+#include <vector>
+
 #include "../video_system.hpp"
+#include "math/size.hpp"
 //#include "video/sampler.hpp"
 //#include "video/texture_ptr.hpp"
 
@@ -35,12 +37,12 @@ class Viewport;
 
 class SDLVideoSystem : public VideoSystem
 {
-
 public:
 	SDLVideoSystem();
 	virtual ~SDLVideoSystem();
-	
-	//virtual TexturePtr new_texture(const SDL_Surface& image, const Sampler& sampler = Sampler()) = 0;
+
+	//virtual TexturePtr new_texture(const SDL_Surface& image, const Sampler& sampler = Sampler()) =
+	//0;
 
 	Backend get_video_system() const;
 	void apply_config() {};
@@ -50,20 +52,20 @@ public:
 
 	void set_vsync(int mode) {};
 	int get_vsync() const { return 0; /*temp*/ };
-	void set_title(const std::string& title) {};
-	void set_icon(const SDL_Surface& icon) {};
+	void set_title(const std::string &title) {};
+	void set_icon(const SDL_Surface &icon) {};
 	//SDLSurfacePtr make_screenshot() {};
-	
+
 	void shutdown();
-		
+
 	void do_take_screenshot();
 
 public:
 	void init();
-	
+
 private:
-	SDLVideoSystem(const SDLVideoSystem&) = delete;
-	SDLVideoSystem& operator=(const SDLVideoSystem&) = delete;
+	SDLVideoSystem(const SDLVideoSystem &)            = delete;
+	SDLVideoSystem &operator=(const SDLVideoSystem &) = delete;
 };
 
 #endif

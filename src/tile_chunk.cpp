@@ -1,44 +1,44 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "tile_chunk.hpp"
-#include "thread_worker.hpp"
-#include "tiles_reader.hpp"
-#include "video/sdl/surface_blitter.hpp"
-#include "video/texture_manager.hpp"
-#include "tilemap.hpp"
+
 #include <atomic>
 #include <stdexcept>
 #include <thread>
 
+#include "thread_worker.hpp"
+#include "tilemap.hpp"
+#include "tiles_reader.hpp"
+#include "video/sdl/surface_blitter.hpp"
+#include "video/texture_manager.hpp"
 
-TileChunk::TileChunk() :
-	m_texture(nullptr),
-	m_tiles(),
-	texture_updating(false),
-	m_empty(true)
+TileChunk::TileChunk()
+    : m_texture(nullptr)
+    , m_tiles()
+    , texture_updating(false)
+    , m_empty(true)
 {
-
 }
 
 TileChunk::~TileChunk()
 {
 }
 
-Tile&
+Tile &
 TileChunk::get_tile(uint8_t x, uint8_t y)
 {
 	// TODO bounds checking
@@ -59,31 +59,32 @@ void
 TileChunk::update_texture_worker(Tilemap *parent, ThreadInfo &info)
 {
 	assert(!m_empty);
-	
+
 	parent->m_tileset->reset();
 	for (int i = 0; i < CHUNK_SIZE; ++i)
 	{
 		for (int j = 0; j < CHUNK_SIZE; ++j)
 		{
-			SDL_Rect dest{i * texture_size, j * texture_size, texture_size, texture_size};
-			try{
-			TileMeta &meta = g_tiles_reader.m_tiles.at(get_tile(i, j).get_id());
-			
-			const std::string &img = meta.info->get_image();
-			SDL_Rect src{(int)meta.x * 32, (int)meta.y * 32, 32, 32};
-			if (img.empty())
-				continue;
-			TextureRef tile = g_texture_manager.load("images/" + img, true);
-#ifndef NDEBUG
-			if (!tile->get_sdl_surface())
+			SDL_Rect dest{ i * texture_size, j * texture_size, texture_size, texture_size };
+			try
 			{
-				Logger::warn(img + " doesn't have an SDL Surface... Expect bad!");
-				continue;
-			}
+				TileMeta &meta = g_tiles_reader.m_tiles.at(get_tile(i, j).get_id());
+
+				const std::string &img = meta.info->get_image();
+				SDL_Rect src{ (int) meta.x * 32, (int) meta.y * 32, 32, 32 };
+				if (img.empty())
+					continue;
+				TextureRef tile = g_texture_manager.load("images/" + img, true);
+#ifndef NDEBUG
+				if (!tile->get_sdl_surface())
+				{
+					Logger::warn(img + " doesn't have an SDL Surface... Expect bad!");
+					continue;
+				}
 #endif
-			parent->m_tileset->blit(tile->get_sdl_surface(), src, dest);
-			} 
-			catch (const std::out_of_range&) {
+				parent->m_tileset->blit(tile->get_sdl_surface(), src, dest);
+			} catch (const std::out_of_range &)
+			{
 				continue;
 			}
 		}
@@ -97,15 +98,16 @@ TileChunk::update_texture(Tilemap *parent)
 	// Don't bother working with empty chunks
 	if (m_empty)
 		return;
-	
+
 	if (!m_texture.get())
 	{
 		if (!texture_updating)
 		{
-			if (parent->m_threads->spawn(m_thread_id, &TileChunk::update_texture_worker, this, parent))
+			if (parent->m_threads->spawn(m_thread_id, &TileChunk::update_texture_worker, this,
+			                             parent))
 				texture_updating = true;
 		}
-		
+
 		auto id = parent->m_threads->poll();
 		if (id && *id == m_thread_id && texture_updating)
 		{

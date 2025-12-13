@@ -1,37 +1,40 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "container.hpp"
-#include "util/logger.hpp"
+
 #include <format>
 
-ContainerWidget::ContainerWidget(const Rectf& props, bool is_horizontal) :
-  BoxWidget{props},
-  m_widgets(),
-  m_spacing(),
-  m_is_horizontal(is_horizontal)
-{}
+#include "util/logger.hpp"
+
+ContainerWidget::ContainerWidget(const Rectf &props, bool is_horizontal)
+    : BoxWidget{ props }
+    , m_widgets()
+    , m_spacing()
+    , m_is_horizontal(is_horizontal)
+{
+}
 
 void
 ContainerWidget::draw(ViewContext &ctx)
 {
 	float pos = 0.f;
-	for (const auto& widget : m_widgets)
+	for (const auto &widget : m_widgets)
 	{
-		const Rectf& r = widget->box();
+		const Rectf &r = widget->box();
 		widget->draw(ctx);
 	}
 }
@@ -40,26 +43,26 @@ void
 ContainerWidget::update()
 {
 	//m_spacing = static_cast<float>(m_widgets.size());
-	const Rectf& that = box();
-	float width = that.get_width() / m_widgets.size();
-	float height = that.get_height() / m_widgets.size();
-	float i = m_is_horizontal ? that.left : that.top;
-	for (auto&& widget : m_widgets)
+	const Rectf &that = box();
+	float width       = that.get_width() / m_widgets.size();
+	float height      = that.get_height() / m_widgets.size();
+	float i           = m_is_horizontal ? that.left : that.top;
+	for (auto &&widget : m_widgets)
 	{
-		const Rectf& other = widget->box();
+		const Rectf &other = widget->box();
 		if (m_is_horizontal)
 		{
-			widget->left = i;
-			widget->right = i + width;
-			widget->top = that.top;
+			widget->left   = i;
+			widget->right  = i + width;
+			widget->top    = that.top;
 			widget->bottom = that.bottom;
 			i += width;
-		}
-		else {
-			widget->top = i;
+		} else
+		{
+			widget->top    = i;
 			widget->bottom = i + height;
-			widget->left = that.left;
-			widget->right = that.right;
+			widget->left   = that.left;
+			widget->right  = that.right;
 			// TODO: other->set_{width,height}(m_spacing)
 			i += height;
 		}
@@ -68,33 +71,34 @@ ContainerWidget::update()
 }
 
 void
-ContainerWidget::add(BoxWidget* box)
+ContainerWidget::add(BoxWidget *box)
 {
 	m_widgets.emplace_back(box);
 }
 
-Widget*
+Widget *
 ContainerWidget::construct(SexpElt elt)
 {
 	SexpElt telt;
 	bool is_horizontal = false;
-	Rectf props = BoxWidget::parse_sexp(elt);
+	Rectf props        = BoxWidget::parse_sexp(elt);
 	if (elt.get_value() == "horizontal")
 	{
 		is_horizontal = true;
 		elt.next_inplace();
 	}
-		
+
 	ContainerWidget *widget = new ContainerWidget(props, is_horizontal);
 	do
 	{
-		BoxWidget *box_widget = dynamic_cast<BoxWidget*>(Widget::create(elt));
+		BoxWidget *box_widget = dynamic_cast<BoxWidget *>(Widget::create(elt));
 		if (!box_widget)
 		{
 			Logger::warn("ContainerWidget: Ignoring an unknown widget. Is it loaded?");
 			continue;
 		}
-		Logger::debug(std::format("Pushing {} widget: {}", box_widget->obj_name(), static_cast<void*>(box_widget)));
+		Logger::debug(std::format("Pushing {} widget: {}", box_widget->obj_name(),
+		                          static_cast<void *>(box_widget)));
 		widget->add(box_widget);
 	} while (elt.next_inplace());
 	return widget;

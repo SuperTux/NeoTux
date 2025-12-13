@@ -15,8 +15,10 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "video_system.hpp"
-#include "math/size.hpp"
+
 #include <SDL3/SDL_video.h>
+
+#include "math/size.hpp"
 
 std::unique_ptr<VideoSystem> g_video_system;
 
@@ -66,7 +68,7 @@ VideoSystem::create_window(int flags)
 	window.create_window(flags | SDL_WINDOW_RESIZABLE, "SuperTux");
 }
 
-Painter*
+Painter *
 VideoSystem::get_painter() const
 {
 	return m_painter.get();
@@ -75,10 +77,9 @@ VideoSystem::get_painter() const
 Size
 VideoSystem::get_window_size() const
 {
-	Size size = { };
+	Size size       = {};
 	SDL_Window *win = window.m_sdl_window.get();
 	SDL_GetWindowSize(win, &size.width, &size.height);
-	
+
 	return size;
 }
-

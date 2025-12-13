@@ -1,36 +1,38 @@
-//  SuperTux 
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys> 
-// 
-//  This program is free software: you can redistribute it and/or modify 
-//  it under the terms of the GNU General Public License as published by 
-//  the Free Software Foundation, either version 3 of the License, or 
-//  (at your option) any later version. 
-// 
-//  This program is distributed in the hope that it will be useful, 
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-//  GNU General Public License for more details. 
-// 
-//  You should have received a copy of the GNU General Public License 
+//  SuperTux
+//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "sexp.hpp"
+
+#include <format>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <vector>
-#include <format>
-#include <fstream>
 #include <string>
-#include <format>
-#include "sexp.hpp"
+#include <vector>
 
-SexpElt::SexpElt() :
-	m_elt(nullptr)
-{}
+SexpElt::SexpElt()
+    : m_elt(nullptr)
+{
+}
 
-SexpElt::SexpElt(sexp_t *me) :
-	m_elt(me)
-{}
+SexpElt::SexpElt(sexp_t *me)
+    : m_elt(me)
+{
+}
 
 SexpElt
 SexpElt::copy()
@@ -38,13 +40,12 @@ SexpElt::copy()
 	return SexpElt(m_elt);
 }
 
-
 SexpElt
 SexpElt::next()
 {
 	if (m_elt && m_elt->next)
 		return SexpElt(m_elt->next);
-		
+
 	return SexpElt();
 }
 
@@ -56,7 +57,7 @@ SexpElt::next_inplace()
 		m_elt = nullptr;
 		return false;
 	}
-	
+
 	m_elt = m_elt->next;
 	return true;
 }
@@ -69,14 +70,13 @@ SexpElt::get_int()
 
 long
 SexpElt::get_int_or(long that)
-try {
+try
+{
 	return get_int();
-}
-catch (const std::out_of_range&)
+} catch (const std::out_of_range &)
 {
 	return that;
 }
-
 
 double
 SexpElt::get_number()
@@ -107,14 +107,13 @@ find_in_list(SexpElt curr, const std::string &name, int max_depth)
 			if (tmp)
 				return tmp;
 		}
-		
+
 		curr.next_inplace();
 		is_car = false;
 	}
-	
+
 	return SexpElt();
 }
-
 
 SexpElt
 SexpElt::find_car(const std::string &name, int max_depth)
@@ -122,22 +121,22 @@ SexpElt::find_car(const std::string &name, int max_depth)
 	return find_in_list(*this, name, max_depth < 0 ? max_depth : max_depth + 1);
 }
 
-
 // ============================================= //
 
-SexpParser::SexpParser() :
-	m_sexp(nullptr, destroy_sexp)
+SexpParser::SexpParser()
+    : m_sexp(nullptr, destroy_sexp)
 {
 }
 
 SexpElt
 SexpParser::read_data(const std::vector<char> &data)
 {
-	sexp_t *sexp = parse_sexp((char*)data.data(), data.size());
+	sexp_t *sexp = parse_sexp((char *) data.data(), data.size());
 	if (!sexp)
-		throw std::runtime_error(std::format("Failed to parse S-Expression (errno: {})", (int)sexp_errno));
+		throw std::runtime_error(std::format("Failed to parse S-Expression (errno: {})",
+		                                     (int) sexp_errno));
 	m_sexp.reset(sexp);
-	
+
 	return SexpElt(sexp);
 }
 
@@ -155,19 +154,17 @@ SexpParser::read_file(const std::string &filename)
 		throw std::runtime_error(std::format("Couldn't open file: \"{}\"", filename));
 	auto size = file.tellg();
 	file.seekg(0, std::ios::beg);
-		
+
 	std::vector<char> buffer(size);
 	if (file.read(buffer.data(), size))
 		;
 	//	return false;
-	
+
 	try
 	{
 		return read_data(buffer);
-	}
-	catch (std::exception &e)
+	} catch (std::exception &e)
 	{
 		throw std::runtime_error(std::format("{} for file \"{}\"", e.what(), filename));
 	}
-	
 }
