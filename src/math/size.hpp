@@ -48,19 +48,18 @@ public:
 		return *this; \
 	}
 
-	operatorX(+=, T, inc, inc, inc) operatorX(-=, T, dec, dec, dec) operatorX(*=, T, inc, inc, inc)
-	    operatorX(/=, T, dec, dec, dec)
+	operatorX(+=, T, inc, inc, inc)
+	operatorX(-=, T, dec, dec, dec)
+	operatorX(*=, T, inc, inc, inc)
+	operatorX(/=, T, dec, dec, dec)
 
-	        operatorX(+=, const Size_t<T> &, rhs, rhs.width, rhs.height)
-	            operatorX(-=, const Size_t<T> &, rhs, rhs.width, rhs.height)
-	                operatorX(*=, const Size_t<T> &, rhs, rhs.width, rhs.height)
-	                    operatorX(/=, const Size_t<T> &, rhs, rhs.width, rhs.height)
+	operatorX(+=, const Size_t<T> &, rhs, rhs.width, rhs.height)
+	operatorX(-=, const Size_t<T> &, rhs, rhs.width, rhs.height)
+	operatorX(*=, const Size_t<T> &, rhs, rhs.width, rhs.height)
+	operatorX(/=, const Size_t<T> &, rhs, rhs.width, rhs.height)
 #undef operatorX
 
-	                        bool is_valid() const
-	{
-		return width > static_cast<T>(0) && height > static_cast<T>(0);
-	}
+	bool is_valid() const { return width > static_cast<T>(0) && height > static_cast<T>(0); }
 
 public:
 	T width;

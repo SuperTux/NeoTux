@@ -92,13 +92,13 @@ public:
 		y opinc other.y; \
 	}
 
-	operatorX(+, +=) operatorX(-, -=) operatorX(*, *=) operatorX(/, /=)
+	operatorX(+, +=)
+	operatorX(-, -=)
+	operatorX(*, *=)
+	operatorX(/, /=)
 #undef operatorX
 
-	    std::string to_string()
-	{
-		return "(" + std::to_string(x) + ", " + std::to_string(y) + ")";
-	}
+	std::string to_string() { return "(" + std::to_string(x) + ", " + std::to_string(y) + ")"; }
 };
 
 using IVec2 = Vec2_t<long>;
