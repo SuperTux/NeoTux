@@ -18,6 +18,7 @@
 #define HEADER_SUPERTUX_TYPES_HPP
 
 #include <cstdint>
+#include <climits>
 
 using i8  = std::int8_t;
 using i16 = std::int16_t;

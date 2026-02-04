@@ -1,5 +1,5 @@
 //  SuperTux
-//  Copyright (C) 2026 Hyland B. <me@ow.swag.toys>
+//  Copyright (C) 2025 MatusGuy <martusguy@proton.me>
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -13,17 +13,22 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#ifndef SUPERTUX_SRC_AUDIO_MUSIC_READER_HPP
+#define SUPERTUX_SRC_AUDIO_MUSIC_READER_HPP
 
-#ifndef SUPERTUX_SRC_UTIL_FILESYSTEM_HPP
-#define SUPERTUX_SRC_UTIL_FILESYSTEM_HPP
+#include "audio/music_data.hpp"
+#include "util/logger.hpp"
+#include "util/sexp.hpp"
 
-#include <string>
-
-namespace FS
+class MusicReader
 {
-	std::string path(const std::string &file);
-	std::string parent_dir(const std::string &file);
-	std::string join(const std::string &a, const std::string& b);
-} // namespace FS
+public:
+	MusicReader();
+
+	MusicData open(const std::string &filename);
+
+private:
+	SexpParser m_parser;
+};
 
 #endif

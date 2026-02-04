@@ -23,29 +23,40 @@
 #include <vector>
 
 #include "config.h"
-#ifdef NEOTUX_USE_MIXER
-#include <SDL3_mixer/SDL_mixer.h>
-#endif
+#include "types.hpp"
+
+struct ma_engine;
+struct ma_sound;
+
+class MAException : public std::runtime_error
+{
+public:
+	MAException(const std::string &what, i32 result);
+};
 
 class Mixer
 {
+	friend class SoundManager;
+
+public:
+	static std::string get_channels_name(u32 channels);
+
 public:
 	Mixer();
 	~Mixer() = default;
 
 	void shutdown();
 	void play_sound(const std::string &filename);
-	void play_music(const std::string &filename);
+	void play_sound(ma_sound *sound);
+	void play_music(std::string filename);
 	bool is_playing_music();
 	void stop_playing_music();
 
+	ma_engine *engine();
+
 private:
-#ifdef NEOTUX_USE_MIXER
-	std::unordered_map<std::string, std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)>> m_cache;
-	std::unique_ptr<Mix_Music, decltype(&Mix_FreeMusic)> m_music;
-	int m_current_channel;
-#endif
-	//std::vector<std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)>> m_soundcache;
+	struct Impl;
+	std::unique_ptr<Impl> impl;
 };
 
 extern Mixer g_mixer;

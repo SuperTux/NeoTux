@@ -14,115 +14,173 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifdef NEOTUX_USE_MIXER
-#include <SDL3_mixer/SDL_mixer.h>
-#endif
+#include "mixer.hpp"
+
+#include <miniaudio.h>
+#include <miniaudio_libvorbis.h>
+
 #include <format>
 
-#include "mixer.hpp"
+#include "audio/music_reader.hpp"
+#include "audio/sound_manager.hpp"
 #include "sdl_exception.hpp"
 #include "util/filesystem.hpp"
 #include "util/logger.hpp"
 
+MAException::MAException(const std::string &what, int result)
+    : std::runtime_error(std::format("{} (ma error: {})", what, result))
+{
+}
+
+struct Mixer::Impl
+{
+	ma_engine engine;
+	ma_resource_manager resource_manager;
+
+	ma_sound music;
+	MusicData music_data;
+};
+
 Mixer g_mixer;
 
-#ifdef NEOTUX_USE_MIXER
 Mixer::Mixer()
-    : m_music(nullptr, Mix_FreeMusic)
-    , m_cache()
-    , m_current_channel(0)
+    : impl(std::make_unique<Impl>())
 {
-	SDL_AudioSpec spec;
-	spec.freq     = MIX_DEFAULT_FREQUENCY;
-	spec.format   = MIX_DEFAULT_FORMAT;
-	spec.channels = MIX_DEFAULT_CHANNELS;
+	ma_result result;
 
-	SDL_Init(SDL_INIT_AUDIO);
-	Mix_Init(MIX_INIT_OGG | MIX_INIT_WAVPACK);
+	ma_decoding_backend_vtable *decoders[] = {
+		ma_decoding_backend_libvorbis
+	};
 
-	Mix_OpenAudio(0, &spec);
-	Logger::info(std::format("Opened audio at {}Hz, {} bit{}, {} audio buffer", spec.freq,
-	                         spec.format & 0xFF, SDL_AUDIO_ISFLOAT(spec.format) ? " (float)" : "",
-	                         (spec.channels > 2)   ? "surround"
-	                         : (spec.channels > 1) ? "stereo"
-	                                               : "mono"));
+	ma_resource_manager_config resource_manager_cfg     = ma_resource_manager_config_init();
+	resource_manager_cfg.pCustomDecodingBackendUserData = nullptr;
+	resource_manager_cfg.ppCustomDecodingBackendVTables = decoders;
+	resource_manager_cfg.customDecodingBackendCount     = sizeof(decoders) / sizeof(decoders[0]);
+
+	result = ma_resource_manager_init(&resource_manager_cfg, &impl->resource_manager);
+	if (result != MA_SUCCESS)
+	{
+		throw MAException("Failed to initialize resource manager", result);
+	}
+
+	ma_engine_config engine_cfg;
+	engine_cfg                  = ma_engine_config_init();
+	engine_cfg.pResourceManager = &impl->resource_manager;
+
+	result = ma_engine_init(&engine_cfg, &impl->engine);
+	if (result != MA_SUCCESS)
+	{
+		throw MAException("Failed to initialize engine", result);
+	}
+
+	ma_device *dev;
+	ma_device_info dev_info;
+	dev = ma_engine_get_device(&impl->engine);
+	ma_device_get_info(dev, ma_device_type_playback, &dev_info);
+
+	Logger::info("Mixer", "Opened audio device:");
+	Logger::info("Mixer",
+	             std::format("\tSample rate: {}Hz", dev_info.nativeDataFormats[0].sampleRate));
+	Logger::info("Mixer", std::format("\tChannels: {} sound ({})",
+	                                  get_channels_name(dev_info.nativeDataFormats[0].channels),
+	                                  dev_info.nativeDataFormats[0].channels));
+	Logger::info("Mixer", std::format("\tFormat: {}",
+	                                  ma_get_format_name(dev_info.nativeDataFormats[0].format)));
 }
-#else
-Mixer::Mixer()
+
+std::string
+Mixer::get_channels_name(u32 channels)
 {
-	Logger::info("Built without SDL3 Mixer support. Hope you enjoy crickets.");
+	if (channels > 2)
+		return "surround";
+	else if (channels > 1)
+		return "stereo";
+	else
+		return "mono";
 }
-#endif
 
 void
 Mixer::shutdown()
 {
-#ifdef NEOTUX_USE_MIXER
-	m_music.reset();
-	m_cache.clear();
-	//m_soundcache.clear();
-#endif
+	ma_sound_uninit(&impl->music);
+	ma_engine_uninit(&impl->engine);
+	ma_resource_manager_uninit(&impl->resource_manager);
 }
 
 bool
 Mixer::is_playing_music()
 {
-#ifdef NEOTUX_USE_MIXER
-	return Mix_PlayingMusic();
-#else
-	return true;
-#endif
+	return ma_sound_is_playing(&impl->music);
 }
 
 void
 Mixer::stop_playing_music()
 {
-#ifdef NEOTUX_USE_MIXER
-	Mix_HaltMusic();
-#endif
+	ma_sound_stop(&impl->music);
 }
 
-// TODO Cache sounds
+ma_engine *
+Mixer::engine()
+{
+	return &impl->engine;
+}
+
 void
 Mixer::play_sound(const std::string &filename)
 {
-#ifdef NEOTUX_USE_MIXER
-	Mix_Chunk *chunk;
-	if (m_cache.contains(filename))
-	{
-		chunk = m_cache.at(filename).get();
-	} else
-	{
-		chunk = Mix_LoadWAV(FS::path(filename).c_str());
-		m_cache.insert({ filename,
-		                 std::unique_ptr<Mix_Chunk, decltype(&Mix_FreeChunk)>(chunk,
-		                                                                      Mix_FreeChunk) });
-	}
-
-	if (!chunk)
-		throw SDLException("Couldn't load chunk");
-
-	++m_current_channel;
-	if (m_current_channel == 4)
-		m_current_channel = 0;
-	Mix_PlayChannel(m_current_channel, chunk, false);
-#endif
+	ma_sound *sound = g_sound_manager.load(filename);
+	play_sound(sound);
 }
 
 void
-Mixer::play_music(const std::string &filename)
+Mixer::play_sound(ma_sound *sound)
 {
-#ifdef NEOTUX_USE_MIXER
-	Mix_Music *music;
-	music = Mix_LoadMUS(FS::path(filename).c_str());
+	if (ma_sound_is_playing(sound))
+		ma_sound_stop(sound);
 
-	if (!music)
+	ma_result result = ma_sound_start(sound);
+	if (result != MA_SUCCESS)
 	{
-		throw SDLException("Couldn't load music");
+		throw MAException("Failed to play sound", result);
+	}
+}
+
+void
+Mixer::play_music(std::string filename)
+{
+	if (filename.ends_with(".music"))
+	{
+		MusicReader reader;
+		impl->music_data = reader.open(FS::path(filename));
+		filename         = FS::join(FS::parent_dir(filename), impl->music_data.file);
+	}
+	else
+	{
+		impl->music_data = {};
 	}
 
-	Mix_FadeInMusic(music, true, 2000);
+	ma_result result;
+	ma_sound_uninit(&impl->music);
+	result = ma_sound_init_from_file(&impl->engine, FS::path(filename).c_str(),
+	                                 MA_SOUND_FLAG_STREAM, nullptr, nullptr, &impl->music);
 
-	m_music.reset(music);
-#endif
+	if (result != MA_SUCCESS)
+	{
+		throw MAException(std::format("Failed to load music {}", FS::path(filename)), result);
+	}
+
+	ma_data_source *music_source = ma_sound_get_data_source(&impl->music);
+	ma_uint32 samplerate;
+	ma_data_source_get_data_format(music_source, nullptr, nullptr, &samplerate, nullptr, 67);
+
+	ma_data_source_set_loop_point_in_pcm_frames(music_source,
+	                                            impl->music_data.loop_begin * samplerate,
+	                                            impl->music_data.loop_at * samplerate);
+	ma_sound_set_looping(&impl->music, MA_TRUE);
+
+	result = ma_sound_start(&impl->music);
+	if (result != MA_SUCCESS)
+	{
+		throw MAException(std::format("Failed to play music {}", FS::path(filename)), result);
+	}
 }

@@ -32,11 +32,11 @@ PlatformingTest::run()
 	Size winsize       = g_video_system->get_window_size();
 	g_rtcontext.width  = winsize.width;
 	g_rtcontext.height = winsize.height;
-
-	g_mixer.play_music("music/antarctic/chipdisko.ogg");
-
-	g_tiles_reader.open();
-
+	
+	g_mixer.play_music("music/antarctic/chipdisko.music");
+	
+	g_tiles_reader.open();	
+	
 	LevelReader reader;
 	Level *level     = reader.open("levels/collision_test.stl");
 	Sector &sector   = level->get_sector(0);

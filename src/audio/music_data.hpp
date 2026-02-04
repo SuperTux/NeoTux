@@ -1,5 +1,5 @@
 //  SuperTux
-//  Copyright (C) 2026 Hyland B. <me@ow.swag.toys>
+//  Copyright (C) 2025 MatusGuy <martusguy@proton.me>
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -13,17 +13,18 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-#ifndef SUPERTUX_SRC_UTIL_FILESYSTEM_HPP
-#define SUPERTUX_SRC_UTIL_FILESYSTEM_HPP
+#ifndef SUPERTUX_SRC_AUDIO_MUSIC_DATA_HPP
+#define SUPERTUX_SRC_AUDIO_MUSIC_DATA_HPP
 
 #include <string>
 
-namespace FS
-{
-	std::string path(const std::string &file);
-	std::string parent_dir(const std::string &file);
-	std::string join(const std::string &a, const std::string& b);
-} // namespace FS
+#include "types.hpp"
 
-#endif
+struct MusicData
+{
+	std::string file;
+	u32 loop_begin = 0;
+	u32 loop_at    = UINT_MAX;
+};
+
+#endif  // SUPERTUX_SRC_AUDIO_MUSIC_DATA_HPP

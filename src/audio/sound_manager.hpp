@@ -1,5 +1,5 @@
 //  SuperTux
-//  Copyright (C) 2026 Hyland B. <me@ow.swag.toys>
+//  Copyright (C) 2025 MatusGuy <martusguy@proton.me>
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -13,17 +13,25 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#ifndef SUPERTUX_SRC_AUDIO_SOUND_MANAGER
+#define SUPERTUX_SRC_AUDIO_SOUND_MANAGER
 
-#ifndef SUPERTUX_SRC_UTIL_FILESYSTEM_HPP
-#define SUPERTUX_SRC_UTIL_FILESYSTEM_HPP
+#include <miniaudio.h>
 
-#include <string>
+#include <memory>
 
-namespace FS
+class SoundManager
 {
-	std::string path(const std::string &file);
-	std::string parent_dir(const std::string &file);
-	std::string join(const std::string &a, const std::string& b);
-} // namespace FS
+public:
+	SoundManager();
 
-#endif
+	ma_sound *load(const std::string &path);
+
+private:
+	struct Impl;
+	std::unique_ptr<Impl> impl;
+};
+
+extern SoundManager g_sound_manager;
+
+#endif  // SUPERTUX_SRC_AUDIO_SOUND_MANAGER
