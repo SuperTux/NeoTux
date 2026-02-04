@@ -1,5 +1,5 @@
 //  SuperTux
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//  Copyright (C) 2026 Hyland B. <me@ow.swag.toys>
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -18,8 +18,15 @@
 #define SUPERTUX_SRC_AUDIO_MIXER_HPP
 
 #include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
+#include "config.h"
 #include "types.hpp"
+
+struct ma_engine;
+struct ma_sound;
 
 class MAException : public std::runtime_error
 {
@@ -27,8 +34,6 @@ public:
 	MAException(const std::string &what, i32 result);
 };
 
-struct ma_engine;
-struct ma_sound;
 class Mixer
 {
 	friend class SoundManager;
@@ -41,13 +46,13 @@ public:
 	~Mixer() = default;
 
 	void shutdown();
-	void play_sound(const std::string& filename);
-	void play_sound(ma_sound* sound);
+	void play_sound(const std::string &filename);
+	void play_sound(ma_sound *sound);
 	void play_music(std::string filename);
 	bool is_playing_music();
 	void stop_playing_music();
 
-	ma_engine* engine();
+	ma_engine *engine();
 
 private:
 	struct Impl;

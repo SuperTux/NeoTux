@@ -17,11 +17,10 @@
 
 MusicReader::MusicReader()
 {
-
 }
 
 MusicData
-MusicReader::open(const std::string& filename)
+MusicReader::open(const std::string &filename)
 {
 	SexpElt root;
 	MusicData out;

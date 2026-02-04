@@ -1,5 +1,5 @@
 //  SuperTux
-//  Copyright (C) 2025 Hyland B. <me@ow.swag.toys>
+//  Copyright (C) 2026 Hyland B. <me@ow.swag.toys>
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -30,4 +30,4 @@ using u16 = std::uint16_t;
 using u32 = std::uint32_t;
 using u64 = std::uint64_t;
 
-#endif // HEADER_SUPERTUX_TYPES_HPP
+#endif  // HEADER_SUPERTUX_TYPES_HPP

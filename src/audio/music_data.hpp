@@ -20,10 +20,11 @@
 
 #include "types.hpp"
 
-struct MusicData {
+struct MusicData
+{
 	std::string file;
 	u32 loop_begin = 0;
-	u32 loop_at = UINT_MAX;
+	u32 loop_at    = UINT_MAX;
 };
 
-#endif // SUPERTUX_SRC_AUDIO_MUSIC_DATA_HPP
+#endif  // SUPERTUX_SRC_AUDIO_MUSIC_DATA_HPP

@@ -16,9 +16,9 @@
 #ifndef SUPERTUX_SRC_AUDIO_MUSIC_READER_HPP
 #define SUPERTUX_SRC_AUDIO_MUSIC_READER_HPP
 
-#include "util/sexp.hpp"
-#include "util/logger.hpp"
 #include "audio/music_data.hpp"
+#include "util/logger.hpp"
+#include "util/sexp.hpp"
 
 class MusicReader
 {
@@ -26,6 +26,7 @@ public:
 	MusicReader();
 
 	MusicData open(const std::string &filename);
+
 private:
 	SexpParser m_parser;
 };

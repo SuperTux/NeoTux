@@ -16,16 +16,16 @@
 #ifndef SUPERTUX_SRC_AUDIO_SOUND_MANAGER
 #define SUPERTUX_SRC_AUDIO_SOUND_MANAGER
 
-#include <memory>
-
 #include <miniaudio.h>
+
+#include <memory>
 
 class SoundManager
 {
 public:
 	SoundManager();
 
-	ma_sound* load(const std::string& path);
+	ma_sound *load(const std::string &path);
 
 private:
 	struct Impl;
@@ -34,4 +34,4 @@ private:
 
 extern SoundManager g_sound_manager;
 
-#endif // SUPERTUX_SRC_AUDIO_SOUND_MANAGER
+#endif  // SUPERTUX_SRC_AUDIO_SOUND_MANAGER
