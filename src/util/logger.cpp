@@ -1,5 +1,5 @@
 //  SuperTux
-//  Copyright (C) 2025 MatusGuy
+//  Copyright (C) 2026 MatusGuy
 //                2025 Hyland B. <me@ow.swag.toys>
 //
 //  This program is free software: you can redistribute it and/or modify
