@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.18)
 project(NeoTux LANGUAGES CXX C)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -21,9 +21,9 @@ find_package(SDL3 REQUIRED)
 find_package(SDL3_ttf)
 find_package(SDL3_image)
 find_package(PkgConfig REQUIRED)
+find_package(Lua 5.4 REQUIRED)
 pkg_check_modules(SDL3_image REQUIRED IMPORTED_TARGET sdl3-image)
 pkg_check_modules(SDL3_ttf REQUIRED IMPORTED_TARGET sdl3-ttf)
-#pkg_check_modules(SDL3_mixer REQUIRED IMPORTED_TARGET sdl3-mixer)
 
 include(FetchContent)
 
@@ -107,6 +107,7 @@ target_link_libraries(NeoTux PUBLIC
 	SDL3::SDL3
 	SDL3_ttf::SDL3_ttf
 	SDL3_image::SDL3_image
+	${LUA_LIBRARIES}
 
 	SFSEXP
 
