@@ -16,16 +16,12 @@
 
 #ifndef SUPERTUX_SRC_OBJECT_OBJECT_STATE_HPP
 #define SUPERTUX_SRC_OBJECT_OBJECT_STATE_HPP
-//#include <simplesquirrel/vm.hpp>
 
 #include <cstdint>
 #include <vector>
 
 class ObjectState
 {
-public:
-	//	static void expose(ssq::VM& vm);
-
 public:
 	ObjectState();
 	ObjectState(const std::size_t size);

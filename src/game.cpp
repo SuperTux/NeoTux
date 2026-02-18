@@ -80,7 +80,7 @@ Game::init_video_system()
 	case VideoSystem::VIDEO_BGFX_METAL:
 	case VideoSystem::VIDEO_SDL:
 	default:
-		g_video_system = std::make_unique<SDLVideoSystem>();
+		g_video_system   = std::make_unique<SDLVideoSystem>();
 	}
 	Logger::info(std::format("Using {} backend",
 	                         VideoSystem::video_system_to_str(g_video_system->get_video_system())));

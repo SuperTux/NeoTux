@@ -57,21 +57,6 @@ endif()
 
 set(SSQ_BUILD_STATIC_ONLY Off)
 
-#TODO broken
-if (NOT PSP)
-	if(EXISTS "${PROJECT_SOURCE_DIR}/external/simplesquirrel")
-		message(STATUS "Using external/simplesquirrel")
-		add_subdirectory("${PROJECT_SOURCE_DIR}/external/simplesquirrel")
-	else()
-		FetchContent_Declare(
-			simplesquirrel
-			GIT_REPOSITORY "https://github.com/swagtoy/simplesquirrel"
-			GIT_BRANCH "master"
-		)
-		FetchContent_MakeAvailable(simplesquirrel)
-	endif()
-endif()
-
 option(NEOTUX_BGFX "Use BGFX library for NeoTux." OFF)
 if(NEOTUX_BGFX)
 	set(BGFX_VERSION "v1.129.8914-493" CACHE STRING "Version of bgfx.cmake to use")
