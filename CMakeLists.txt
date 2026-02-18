@@ -102,12 +102,12 @@ if(NOT NEOTUX_BGFX)
 endif()
 
 add_executable(NeoTux ${NEOTUX_SRC} )
-target_include_directories(NeoTux PRIVATE src tests/game_tests)
+target_include_directories(NeoTux PRIVATE src tests/game_tests ${LUA_INCLUDE_DIR})
 target_link_libraries(NeoTux PUBLIC
+	${LUA_LIBRARIES}
 	SDL3::SDL3
 	SDL3_ttf::SDL3_ttf
 	SDL3_image::SDL3_image
-	${LUA_LIBRARIES}
 
 	SFSEXP
 

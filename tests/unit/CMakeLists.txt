@@ -36,6 +36,11 @@ make_unit_test(VectorTest SOURCE vector_test.cpp
 make_unit_test(BindingsTest SOURCE bindings_test.cpp
 	EXTERNAL input_manager.hpp)
 
+make_unit_test(LuaStateTest SOURCE lua_state_test.cpp
+	LIBRARIES ${LUA_LIBRARIES}
+	INCLUDES ${LUA_INCLUDE_DIR}
+	EXTERNAL luacxx/luacxx.hpp)
+
 #message("ALL TESTS: ${all_test_targets}")
 
 set(NEOTUX_UNITTESTS_DIR "${PROJECT_SOURCE_DIR}/tests/unit" CACHE PATH "Where NeoTux will look for unit test data.")
