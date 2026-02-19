@@ -25,10 +25,16 @@ class LuaState
 {
 public:
 	LuaState();
+	// does not manage memory of m_L
+	LuaState(const LuaState& state);
+	LuaState(lua_State* L);
 	~LuaState() = default;
 	
-	void open_libs();
+	void openlibs();
+	
+	lua_State* get_state() const { return m_L.get(); }
 private:
+	// 
 	std::unique_ptr<lua_State, decltype(&lua_close)> m_L;
 };
 

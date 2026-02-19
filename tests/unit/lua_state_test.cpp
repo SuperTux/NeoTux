@@ -18,12 +18,23 @@
 #include <iostream>
 #include "luacxx/luacxx.hpp"
 
+void
+doohickey(lua::LuaState state)
+{
+}
+
 int
 main()
 {
 	lua::LuaState state{};
 	
-	state.open_libs();
+	state.openlibs();
+	
+	doohickey(state);
+	doohickey(state);
+	doohickey(state);
+	
+	
 	
 	return 0;
 }

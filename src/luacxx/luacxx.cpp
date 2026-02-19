@@ -17,6 +17,13 @@
 #include "luacxx.hpp"
 #include <lauxlib.h>
 
+#define _L (m_L.get())
+
+template <class T>
+static void
+noop_delete(T* U)
+{}
+
 namespace lua
 {
 
@@ -26,11 +33,21 @@ LuaState::LuaState()
 	m_L.reset(luaL_newstate());
 }
 
+// should we use a weak pointer for these instead?
+LuaState::LuaState(lua_State* L)
+	: m_L(L, ::noop_delete)
+{}
+
+LuaState::LuaState(const LuaState& state)
+	: LuaState(state.get_state())
+{}
+
 void
-LuaState::open_libs()
+LuaState::openlibs()
 {
 	// TODO better control over this/sandboxing, whatever
-	luaL_openlibs(m_L.get());
+	luaL_openlibs(_L);
+	
 }
 
 } // namespace lua

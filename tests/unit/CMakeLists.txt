@@ -39,7 +39,7 @@ make_unit_test(BindingsTest SOURCE bindings_test.cpp
 make_unit_test(LuaStateTest SOURCE lua_state_test.cpp
 	LIBRARIES ${LUA_LIBRARIES}
 	INCLUDES ${LUA_INCLUDE_DIR}
-	EXTERNAL luacxx/luacxx.hpp)
+	EXTERNAL luacxx/luacxx.cpp)
 
 #message("ALL TESTS: ${all_test_targets}")
 
