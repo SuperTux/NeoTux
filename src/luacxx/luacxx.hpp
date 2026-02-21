@@ -31,6 +31,8 @@ public:
 	~LuaState() = default;
 	
 	void openlibs();
+
+#define __GENERATE_LUA_METHODS__
 	
 	lua_State* get_state() const { return m_L.get(); }
 private:
@@ -39,3 +41,7 @@ private:
 };
 
 } // namespace lua
+
+#ifdef __GENERATE_LUA_METHODS__
+#	error luacxx.hpp has not been generated yet. You may not use this on its own.
+#endif

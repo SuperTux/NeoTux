@@ -47,7 +47,12 @@ LuaState::openlibs()
 {
 	// TODO better control over this/sandboxing, whatever
 	luaL_openlibs(_L);
-	
 }
 
+#define __GENERATE_LUA_METHODS__
+
 } // namespace lua
+
+#ifdef __GENERATE_LUA_METHODS__
+#	error luacxx.cpp has not been generated yet. You may not use this on its own.
+#endif
