@@ -93,15 +93,37 @@ if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
+find_program(LUA_COMMAND NAMES lua5.4 lua REQUIRED)
+add_custom_target(NeoTux_luacxx_gen
+	COMMENT "Generating luacxx files"
+	COMMAND "${LUA_COMMAND}" "${PROJECT_SOURCE_DIR}/scripts/generate_lua_capi.lua"
+			"${PROJECT_SOURCE_DIR}/src/luacxx/luacxx.hpp"
+			"${PROJECT_SOURCE_DIR}/scripts/lua_capi_data.lua"
+			"${PROJECT_BINARY_DIR}/luacxx/luacxx.hpp" -header
+	COMMAND "${LUA_COMMAND}" "${PROJECT_SOURCE_DIR}/scripts/generate_lua_capi.lua"
+			"${PROJECT_SOURCE_DIR}/src/luacxx/luacxx.cpp"
+			"${PROJECT_SOURCE_DIR}/scripts/lua_capi_data.lua"
+			"${PROJECT_BINARY_DIR}/luacxx/luacxx.cpp"
+	WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
+	SOURCES scripts/generate_lua_capi.lua
+			scripts/lua_capi_data.lua
+	BYPRODUCTS "${PROJECT_BINARY_DIR}/luacxx/luacxx.cpp"
+			   "${PROJECT_BINARY_DIR}/luacxx/luacxx.hpp"
+)
+
 file(GLOB_RECURSE NEOTUX_SRC CONFIGURE_DEPENDS
 	src/*.cpp src/*.hpp src/*/*.cpp src/*/*.hpp
 	tests/game_tests/*.cpp tests/game_tests/*.hpp)
+list(FILTER NEOTUX_SRC EXCLUDE REGEX luacxx/)
 
 if(NOT NEOTUX_BGFX)
 	list(FILTER NEOTUX_SRC EXCLUDE REGEX bgfx/)
 endif()
 
-add_executable(NeoTux ${NEOTUX_SRC} )
+add_executable(NeoTux ${NEOTUX_SRC})
+
+target_sources(NeoTux PRIVATE "${PROJECT_BINARY_DIR}/luacxx/luacxx.cpp"
+							  "${PROJECT_BINARY_DIR}/luacxx/luacxx.hpp")
 target_include_directories(NeoTux PRIVATE src tests/game_tests ${LUA_INCLUDE_DIR})
 target_link_libraries(NeoTux PUBLIC
 	${LUA_LIBRARIES}

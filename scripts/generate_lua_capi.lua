@@ -17,8 +17,11 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 ]]--
 
-local _header_mode = (arg[3] == 'header')
+local _header_mode = (arg[4] == '-header')
 local _data = dofile(arg[2] or 'lua_capi_data.lua')
+local _outfile = (arg[3] or (_header_mode and "output.hpp" or "output.cpp"))
+
+print(string.format("-- writing %s %s", _header_mode and "header file" or "source file", _outfile))
 
 -- Slips some text into our header line
 function slip_in(filename, output, content)
@@ -104,7 +107,7 @@ function generate_header()
 	local res = {}
 	
 	iterate_data(function(ret, raw_sym, sym, args)
-		res[#res+1] = string.format('%s %s (%s)', ret, sym, flatten_args(args))
+		res[#res+1] = string.format('%s %s (%s);', ret, sym, flatten_args(args))
 	end)
 	
 	return table.concat(res, '\n')
@@ -132,5 +135,4 @@ function generate_cxx()
 	return table.concat(res, '\n')
 end
 
-slip_in(arg[1], "output.hpp", _header_mode and generate_header() or generate_cxx())
-
+slip_in(arg[1], _outfile, _header_mode and generate_header() or generate_cxx())
