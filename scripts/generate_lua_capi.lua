@@ -14,7 +14,7 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>. 
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ]]--
 
 local _header_mode = (arg[4] == '-header')
@@ -38,7 +38,7 @@ function slip_in(filename, output, content)
 			fh:write(line .. '\n')
 		end
 	end
-	
+
 	if not found then
 		print "-- couldn't find __GENERATE_LUA_METHODS__ macro!"
 	end
@@ -50,16 +50,16 @@ function iterate_data(cb)
 		local args = fun[2]
 		local ret = fun[3] or 'void'
 		if (fun[1] == '' or not fun[1]) then goto hell end
-		
+
 		if string.sub(fun[1], 0, 1) == '_' then
 			symbol = string.sub(fun[1], 2)
 		else
 			goto hell
 		end
 		-- TODO: more error checkin
-		
+
 		cb(ret, fun[1], symbol, args)
-		
+
 		::hell::
 	end
 end
@@ -76,11 +76,11 @@ end
 
 function flatten_args(args)
 	if not args then return '' end
-	
+
 	if type(args) == 'string' then
 		return split_arg_join(args)
 	end
-	
+
 	local args_tbl = {}
 	for i, v in pairs(args) do
 		args_tbl[#args_tbl+1] = split_arg_join(v)
@@ -90,11 +90,11 @@ end
 
 function flatten_args_ret(args)
 	if not args then return '' end
-	
+
 	if type(args) == 'string' then
 		return split_arg(args)[2]
 	end
-	
+
 	local args_tbl = {}
 	for i, v in pairs(args) do
 		args_tbl[#args_tbl+1] = split_arg(v)[2]
@@ -105,18 +105,18 @@ end
 function generate_header()
 	print '-- generating headers'
 	local res = {}
-	
+
 	iterate_data(function(ret, raw_sym, sym, args)
 		res[#res+1] = string.format('%s %s (%s);', ret, sym, flatten_args(args))
 	end)
-	
+
 	return table.concat(res, '\n')
 end
 
 function generate_cxx()
 	print '-- generating cpp'
 	local res = {}
-	
+
 	-- TODO: flatten args
 	iterate_data(function(ret, raw_sym, sym, args)
 		res[#res+1] =
@@ -129,9 +129,9 @@ function generate_cxx()
 				raw_sym,
 				args and '_L, ' or '_L',
 				flatten_args_ret(args))
-			
+
 	end)
-	
+
 	return table.concat(res, '\n')
 end
 

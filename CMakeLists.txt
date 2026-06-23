@@ -11,7 +11,7 @@ if (NOT EXISTS "${NEOTUX_DATA_DIR}")
 	else()
 		message("Your specified data directory doesn't exist. Is it placed?")
 	endif()
-	
+
 	# Realy dumb... whatever
 	file(COPY "${CMAKE_SOURCE_DIR}/data" DESTINATION "${CMAKE_BINARY_DIR}")
 endif()
@@ -107,6 +107,8 @@ add_custom_target(NeoTux_luacxx_gen
 	WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
 	SOURCES scripts/generate_lua_capi.lua
 			scripts/lua_capi_data.lua
+			src/luacxx/luacxx.hpp
+			src/luacxx/luacxx.cpp
 	BYPRODUCTS "${PROJECT_BINARY_DIR}/luacxx/luacxx.cpp"
 			   "${PROJECT_BINARY_DIR}/luacxx/luacxx.hpp"
 )
@@ -121,6 +123,7 @@ if(NOT NEOTUX_BGFX)
 endif()
 
 add_executable(NeoTux ${NEOTUX_SRC})
+add_dependencies(NeoTux NeoTux_luacxx_gen)
 
 target_sources(NeoTux PRIVATE "${PROJECT_BINARY_DIR}/luacxx/luacxx.cpp"
 							  "${PROJECT_BINARY_DIR}/luacxx/luacxx.hpp")
@@ -149,7 +152,7 @@ option(NEOTUX_ASAN "Use Address Santizer." OFF)
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
 	target_compile_options(NeoTux PUBLIC -O0 -g -ggdb -fno-omit-frame-pointer)
 	target_link_options(NeoTux PUBLIC -O0 -g -ggdb -fno-omit-frame-pointer)
-	
+
 	if (NEOTUX_ASAN)
 		target_compile_options(NeoTux PUBLIC -fsanitize=address)
 		target_link_options(NeoTux PUBLIC -fsanitize=address)

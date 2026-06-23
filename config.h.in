@@ -2,3 +2,4 @@
 #cmakedefine NEOTUX_PSP
 #cmakedefine NEOTUX_UNITTESTS_DIR "@NEOTUX_UNITTESTS_DIR@"
 #cmakedefine NEOTUX_DATA_DIR "@NEOTUX_DATA_DIR@"
+#cmakedefine NEOTUX_LUACXX_
