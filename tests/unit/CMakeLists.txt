@@ -29,7 +29,7 @@ make_unit_test(SexpTest SOURCE sexp_test.cpp
 
 make_unit_test(FilesystemTest SOURCE filesystem_test.cpp
 	EXTERNAL util/filesystem.cpp)
-	
+
 make_unit_test(VectorTest SOURCE vector_test.cpp
 	EXTERNAL math/vector.hpp)
 
@@ -38,7 +38,7 @@ make_unit_test(BindingsTest SOURCE bindings_test.cpp
 
 make_unit_test(LuaStateTest SOURCE lua_state_test.cpp
 	LIBRARIES ${LUA_LIBRARIES}
-	INCLUDES ${LUA_INCLUDE_DIR}
+	INCLUDES ${LUA_INCLUDE_DIR} ${PROJECT_BINARY_DIR}/luacxx/
 	EXTERNAL luacxx/luacxx.cpp)
 
 #message("ALL TESTS: ${all_test_targets}")

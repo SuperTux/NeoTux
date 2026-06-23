@@ -16,6 +16,7 @@
 
 #pragma once
 #include <memory>
+#include "config.h"
 #include <lua.hpp>
 
 namespace lua
@@ -29,19 +30,15 @@ public:
 	LuaState(const LuaState& state);
 	LuaState(lua_State* L);
 	~LuaState() = default;
-	
+
 	void openlibs();
 
-#define __GENERATE_LUA_METHODS__
-	
+#include "luacxx_gen.hpp"
+
 	lua_State* get_state() const { return m_L.get(); }
+
 private:
-	// 
 	std::unique_ptr<lua_State, decltype(&lua_close)> m_L;
 };
 
 } // namespace lua
-
-#ifdef __GENERATE_LUA_METHODS__
-#	error luacxx.hpp has not been generated yet. You may not use this on its own.
-#endif
