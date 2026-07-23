@@ -27,14 +27,12 @@ int
 main()
 {
 	lua::LuaState state{};
-	
+
 	state.openlibs();
-	
+
 	doohickey(state);
 	doohickey(state);
 	doohickey(state);
-	
-	
-	
+
 	return 0;
 }
