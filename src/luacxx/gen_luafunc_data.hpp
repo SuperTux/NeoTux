@@ -3,8 +3,12 @@
 #	error No GEN_LUAFUNC macro defined!
 #endif
 
+#ifndef GEN_GETL
+#	define GEN_GETL m_L.get()
+#endif
+
 #ifdef GEN_BODY
-#	define GEN_LUABODY(RETURN, FNAME, ...) { RETURN lua_##FNAME (_L __VA_OPT__(,) __VA_ARGS__); }
+#	define GEN_LUABODY(RETURN, FNAME, ...) { RETURN lua_##FNAME (GEN_GETL __VA_OPT__(,) __VA_ARGS__); }
 #else
 #	define GEN_LUABODY(...)
 #endif

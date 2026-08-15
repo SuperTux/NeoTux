@@ -49,8 +49,4 @@ LuaState::openlibs()
 	luaL_openlibs(_L);
 }
 
-#define GEN_LUAFUNC(_ret, _name, ...) _ret LuaState::_name (__VA_ARGS__)
-#define GEN_BODY
-#include "gen_luafunc_data.hpp"
-
 } // namespace lua

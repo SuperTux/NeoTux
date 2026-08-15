@@ -33,7 +33,8 @@ public:
 
 	void openlibs();
 
-#define GEN_LUAFUNC(_ret, _name, ...) _ret _name (__VA_ARGS__);
+#define GEN_LUAFUNC(_ret, _name, ...) inline _ret _name (__VA_ARGS__)
+#define GEN_BODY
 #include "gen_luafunc_data.hpp"
 
 	lua_State* get_state() const { return m_L.get(); }
