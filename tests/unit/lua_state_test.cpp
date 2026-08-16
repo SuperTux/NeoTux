@@ -31,8 +31,13 @@ main()
 	state.openlibs();
 
 	doohickey(state);
-	doohickey(state);
-	doohickey(state);
+	int file = state.loadstring("return 2+2");
+	state.pcall(0, LUA_MULTRET, 0);
+	lua_Integer x = state.tointeger(-1);
+
+	std::cout << "Got " << x << std::endl;
+	state.pop();
+
 
 	return 0;
 }

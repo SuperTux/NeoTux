@@ -9,8 +9,10 @@
 
 #ifdef GEN_BODY
 #	define GEN_LUABODY(RETURN, FNAME, ...) { RETURN lua_##FNAME (GEN_GETL __VA_OPT__(,) __VA_ARGS__); }
+#	define GEN_LUABODY_L(RETURN, FNAME, ...) { RETURN luaL_##FNAME (GEN_GETL __VA_OPT__(,) __VA_ARGS__); }
 #else
 #	define GEN_LUABODY(...)
+#	define GEN_LUABODY_L(...)
 #endif
 
 GEN_LUAFUNC(void, absindex, int idx)
@@ -105,7 +107,7 @@ GEN_LUAFUNC(int, pcall, int nargs, int nresults, int msgh)
 GEN_LUABODY(return, pcall, nargs, nresults, msgh)
 GEN_LUAFUNC(int, pcallk, int nargs, int nresults, int msgh, lua_KContext ctx, lua_KFunction k)
 GEN_LUABODY(return, pcallk, nargs, nresults, msgh, ctx, k)
-GEN_LUAFUNC(void, pop, int n)
+GEN_LUAFUNC(void, pop, int n = 1)
 GEN_LUABODY(, pop, n)
 GEN_LUAFUNC(void, pushboolean, int b)
 GEN_LUABODY(, pushboolean, b)
@@ -218,6 +220,13 @@ GEN_LUAFUNC(int, yield, int nresults)
 GEN_LUABODY(return, yield, nresults)
 GEN_LUAFUNC(int, yieldk, int nresults, lua_KContext ctx, lua_KFunction k)
 GEN_LUABODY(return, yieldk, nresults, ctx, k)
+
+// Auxilary
+GEN_LUAFUNC  (int, loadfile, const std::string& filename)
+GEN_LUABODY_L(return, loadfile, filename.c_str())
+GEN_LUAFUNC  (int, loadstring, const std::string& s)
+GEN_LUABODY_L(return, loadstring, s.c_str())
+
 
 // throw these away; they're one use
 #undef GEN_BODY

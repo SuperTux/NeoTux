@@ -15,8 +15,11 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include <memory>
+
 #include "config.h"
+
+#include <string>
+#include <memory>
 #include <lua.hpp>
 
 namespace lua
