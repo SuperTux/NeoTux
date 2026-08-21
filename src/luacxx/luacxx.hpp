@@ -18,6 +18,7 @@
 
 #include "config.h"
 
+#include <variant>
 #include <string>
 #include <memory>
 #include <lua.hpp>
@@ -25,9 +26,14 @@
 namespace lua
 {
 
+class LuaState;
+class LuaStateIndex;
+
+
 class LuaState
 {
 public:
+	friend class LuaStateIndex;
 	LuaState();
 	// does not manage memory of m_L
 	LuaState(const LuaState& state);
@@ -36,8 +42,7 @@ public:
 
 	void openlibs();
 
-#define GEN_LUAFUNC(_ret, _name, ...) inline _ret _name (__VA_ARGS__)
-#define GEN_BODY
+#define GEN_LUAFUNC(_ret, _name, ...) _ret _name (__VA_ARGS__);
 #include "gen_luafunc_data.hpp"
 
 	lua_State* get_state() const { return m_L.get(); }
@@ -45,5 +50,43 @@ public:
 private:
 	std::unique_ptr<lua_State, decltype(&lua_close)> m_L;
 };
+
+class LuaStateIndex : public LuaState
+{
+	friend class LuaState;
+
+public:
+	~LuaStateIndex() = default;
+private:
+	LuaStateIndex(int index, lua_State* L)
+		: LuaState(L)
+	{}
+
+public:
+	inline int get_index() { return m_index; }
+
+	inline bool isboolean()       { return LuaState::isboolean(get_index()); }
+	inline bool iscfunction()     { return LuaState::iscfunction(get_index()); }
+	inline bool isfunction()      { return LuaState::isfunction(get_index()); }
+	inline bool isinteger()       { return LuaState::isinteger(get_index()); }
+	inline bool islightuserdata() { return LuaState::islightuserdata(get_index()); }
+	inline bool isnil()           { return LuaState::isnil(get_index()); }
+	inline bool isnone()          { return LuaState::isnone(get_index()); }
+	inline bool isnoneornil()     { return LuaState::isnoneornil(get_index()); }
+	inline bool isnumber()        { return LuaState::isnumber(get_index()); }
+	inline bool isstring()        { return LuaState::isstring(get_index()); }
+	inline bool istable()         { return LuaState::istable(get_index()); }
+	inline bool isthread()        { return LuaState::isthread(get_index()); }
+	inline bool isuserdata()      { return LuaState::isuserdata(get_index()); }
+
+	//void len() { lua_len(m_L.get(), get_index()); }
+
+private:
+	int m_index;
+};
+
+#define GEN_LUAFUNC(_ret, _name, ...) inline _ret LuaState::_name (__VA_ARGS__)
+#define GEN_BODY
+#include "gen_luafunc_data.hpp"
 
 } // namespace lua

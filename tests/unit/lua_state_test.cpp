@@ -18,10 +18,10 @@
 #include <iostream>
 #include "luacxx/luacxx.hpp"
 
-void
-doohickey(lua::LuaState state)
-{
-}
+// void
+// doohickey(lua::LuaState<std::monostate> state)
+// {
+// }
 
 int
 main()
@@ -30,12 +30,12 @@ main()
 
 	state.openlibs();
 
-	doohickey(state);
-	int file = state.loadstring("return 2+2");
+	//doohickey(state);
+	state.loadstring("return 2+2");
 	state.pcall(0, LUA_MULTRET, 0);
-	lua_Integer x = state.tointeger(-1);
+	//state.pcall(0, LUA_MULTRET, 0);
 
-	std::cout << "Got " << x << std::endl;
+	std::cout << "Got " << state.tointeger(-1) << std::endl;
 	state.pop();
 
 
