@@ -18,8 +18,6 @@
 
 #include "config.h"
 
-#include <variant>
-#include <string>
 #include <memory>
 #include <lua.hpp>
 
@@ -28,7 +26,6 @@ namespace lua
 
 class LuaState;
 class LuaStateIndex;
-
 
 class LuaState
 {
@@ -57,9 +54,11 @@ class LuaStateIndex : public LuaState
 
 public:
 	~LuaStateIndex() = default;
+
 private:
 	LuaStateIndex(int index, lua_State* L)
 		: LuaState(L)
+		, m_index(index)
 	{}
 
 public:
