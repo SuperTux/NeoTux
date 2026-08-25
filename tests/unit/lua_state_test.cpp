@@ -18,10 +18,10 @@
 #include <iostream>
 #include "luacxx/luacxx.hpp"
 
-// void
-// doohickey(lua::LuaState<std::monostate> state)
-// {
-// }
+void
+doohickey(lua::LuaState state)
+{
+}
 
 int
 main()
@@ -30,14 +30,18 @@ main()
 
 	state.openlibs();
 
-	//doohickey(state);
-	state.loadstring("return 2+2");
+	doohickey(state);
+	state.pushcfunction([](lua_State *_s) {
+		((lua::LuaState)_s).pushstring("hi");
+		return 1;
+	}).setglobal("mycoolfunction");
+
+	state.loadstring("return mycoolfunction()..' world'");
 	state.pcall(0, LUA_MULTRET, 0);
 	//state.pcall(0, LUA_MULTRET, 0);
 
-	std::cout << "Got " << state.tointeger(-1) << std::endl;
-	state.pop();
-
+	std::cout << "Got " << state.tostring(state.gettop().get_index()) << std::endl;
+	state.pop(); //bye
 
 	return 0;
 }
