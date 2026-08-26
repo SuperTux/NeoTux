@@ -78,6 +78,16 @@ public:
 	inline bool isthread()        { return LuaState::isthread(get_index()); }
 	inline bool isuserdata()      { return LuaState::isuserdata(get_index()); }
 
+	inline bool toboolean()        { return LuaState::toboolean(get_index()); }
+	inline lua_CFunction tocfunction()  { return LuaState::tocfunction(get_index()); }
+	inline lua_Integer tointeger() { return LuaState::tointeger(get_index()); }
+	inline lua_Number tonumber()   { return LuaState::tonumber(get_index()); }
+	// TODO: wrap these
+	inline const char* tostring()  { return LuaState::tostring(get_index()); }
+	inline lua_State* tothread()   { return LuaState::tothread(get_index()); }
+	// END TODO
+	inline void* touserdata()      { return LuaState::touserdata(get_index()); }
+
 	//void len() { lua_len(m_L.get(), get_index()); }
 
 private:

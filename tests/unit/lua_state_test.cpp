@@ -40,7 +40,7 @@ main()
 	state.pcall(0, LUA_MULTRET, 0);
 	//state.pcall(0, LUA_MULTRET, 0);
 
-	std::cout << "Got " << state.tostring(state.gettop().get_index()) << std::endl;
+	std::cout << "Got " << state.gettop().tostring() << std::endl;
 	state.pop(); //bye
 
 	return 0;
