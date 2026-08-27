@@ -64,29 +64,10 @@ private:
 public:
 	inline int get_index() { return m_index; }
 
-	inline bool isboolean()       { return LuaState::isboolean(get_index()); }
-	inline bool iscfunction()     { return LuaState::iscfunction(get_index()); }
-	inline bool isfunction()      { return LuaState::isfunction(get_index()); }
-	inline bool isinteger()       { return LuaState::isinteger(get_index()); }
-	inline bool islightuserdata() { return LuaState::islightuserdata(get_index()); }
-	inline bool isnil()           { return LuaState::isnil(get_index()); }
-	inline bool isnone()          { return LuaState::isnone(get_index()); }
-	inline bool isnoneornil()     { return LuaState::isnoneornil(get_index()); }
-	inline bool isnumber()        { return LuaState::isnumber(get_index()); }
-	inline bool isstring()        { return LuaState::isstring(get_index()); }
-	inline bool istable()         { return LuaState::istable(get_index()); }
-	inline bool isthread()        { return LuaState::isthread(get_index()); }
-	inline bool isuserdata()      { return LuaState::isuserdata(get_index()); }
-
-	inline bool toboolean()        { return LuaState::toboolean(get_index()); }
-	inline lua_CFunction tocfunction()  { return LuaState::tocfunction(get_index()); }
-	inline lua_Integer tointeger() { return LuaState::tointeger(get_index()); }
-	inline lua_Number tonumber()   { return LuaState::tonumber(get_index()); }
-	// TODO: wrap these
-	inline const char* tostring()  { return LuaState::tostring(get_index()); }
-	inline lua_State* tothread()   { return LuaState::tothread(get_index()); }
-	// END TODO
-	inline void* touserdata()      { return LuaState::touserdata(get_index()); }
+#define GEN_LUAFUNC_IDX(_ret, _name, NOOP, ...) inline _ret _name (__VA_ARGS__)
+#define INDEX_SPECIALIZATION
+#define GET_INDEX get_index()
+#include "gen_luafunc_data.hpp"
 
 	//void len() { lua_len(m_L.get(), get_index()); }
 

@@ -1,5 +1,6 @@
-#ifndef GEN_LUAFUNC
+#if !(defined(GEN_LUAFUNC) || (defined(INDEX_SPECIALIZATION) && defined(GEN_LUAFUNC_IDX)))
 #	define GEN_LUAFUNC(...)
+#	define GEN_LUAFUNC_IDX(...)
 #	error No GEN_LUAFUNC macro defined!
 #endif
 
@@ -29,6 +30,32 @@
 #	define GEN_VLUABODY_L(...)
 #	define GEN_ILUABODY(...)
 #	define GEN_ILUABODY_L(...)
+#endif
+
+#ifdef INDEX_SPECIALIZATION
+#	define GEN_LUAFUNC(...)
+#	define GEN_LUABODY_IDX(RETURN, FNAME, NOOP, ...) { \
+	return lua_##FNAME (_GEN_GETL , GET_INDEX __VA_OPT__(,) __VA_ARGS__); }
+#	define GEN_LUABODY_LIDX(RETURN, FNAME, NOOP, ...) { \
+	return luaL_##FNAME (_GEN_GETL , GET_INDEX __VA_OPT__(,) __VA_ARGS__); }
+	// V == void
+#	define GEN_VLUABODY_IDX(FNAME, NOOP, ...) { \
+	lua_##FNAME (_GEN_GETL , GET_INDEX __VA_OPT__(,) __VA_ARGS__); return LuaState{_GEN_GETL}; }
+#	define GEN_VLUABODY_LIDX(FNAME, NOOP, ...) { \
+	luaL_##FNAME (_GEN_GETL , GET_INDEX __VA_OPT__(,) __VA_ARGS__); return LuaState{_GEN_GETL}; }
+	// I == index
+#	define GEN_ILUABODY_IDX(FNAME, NOOP, ...) { \
+	return LuaStateIndex{lua_##FNAME (_GEN_GETL , GET_INDEX __VA_OPT__(,) __VA_ARGS__), _GEN_GETL}; }
+#	define GEN_ILUABODY_LIDX(FNAME, NOOP, ...) { \
+	return LuaStateIndex{luaL_##FNAME (_GEN_GETL , GET_INDEX __VA_OPT__(,) __VA_ARGS__), _GEN_GETL}; }
+#else
+#	define GEN_LUAFUNC_IDX GEN_LUAFUNC
+#	define GEN_LUABODY_IDX GEN_LUABODY
+#	define GEN_LUABODY_LIDX GEN_LUABODY_L
+#	define GEN_VLUABODY_IDX GEN_VLUABODY
+#	define GEN_VLUABODY_LIDX GEN_VLUABODY_L
+#	define GEN_ILUABODY_IDX GEN_ILUABODY
+#	define GEN_ILUABODY_LIDX GEN_ILUABODY_L
 #endif
 
 GEN_LUAFUNC(_VOID_T, absindex, int idx)
@@ -79,32 +106,32 @@ GEN_LUAFUNC(int, getiuservalue, int index, int n)
 GEN_LUABODY(return, getiuservalue,    index, n)
 GEN_LUAFUNC(_VOID_T, insert, int index)
 GEN_VLUABODY(insert, index)
-GEN_LUAFUNC(int, isboolean, int index)
-GEN_LUABODY(return, isboolean, index)
-GEN_LUAFUNC(int, iscfunction, int index)
-GEN_LUABODY(return, iscfunction, index)
-GEN_LUAFUNC(int, isfunction, int index)
-GEN_LUABODY(return, isfunction, index)
-GEN_LUAFUNC(int, isinteger, int index)
-GEN_LUABODY(return, isinteger, index)
-GEN_LUAFUNC(int, islightuserdata, int index)
-GEN_LUABODY(return, islightuserdata, index)
-GEN_LUAFUNC(int, isnil, int index)
-GEN_LUABODY(return, isnil, index)
-GEN_LUAFUNC(int, isnone, int index)
-GEN_LUABODY(return, isnone, index)
-GEN_LUAFUNC(int, isnoneornil, int index)
-GEN_LUABODY(return, isnoneornil, index)
-GEN_LUAFUNC(int, isnumber, int index)
-GEN_LUABODY(return, isnumber, index)
-GEN_LUAFUNC(int, isstring, int index)
-GEN_LUABODY(return, isstring, index)
-GEN_LUAFUNC(int, istable, int index)
-GEN_LUABODY(return, istable, index)
-GEN_LUAFUNC(int, isthread, int index)
-GEN_LUABODY(return, isthread, index)
-GEN_LUAFUNC(int, isuserdata, int index)
-GEN_LUABODY(return, isuserdata, index)
+GEN_LUAFUNC_IDX(int, isboolean, int index)
+GEN_LUABODY_IDX(return, isboolean, index)
+GEN_LUAFUNC_IDX(int, iscfunction, int index)
+GEN_LUABODY_IDX(return, iscfunction, index)
+GEN_LUAFUNC_IDX(int, isfunction, int index)
+GEN_LUABODY_IDX(return, isfunction, index)
+GEN_LUAFUNC_IDX(int, isinteger, int index)
+GEN_LUABODY_IDX(return, isinteger, index)
+GEN_LUAFUNC_IDX(int, islightuserdata, int index)
+GEN_LUABODY_IDX(return, islightuserdata, index)
+GEN_LUAFUNC_IDX(int, isnil, int index)
+GEN_LUABODY_IDX(return, isnil, index)
+GEN_LUAFUNC_IDX(int, isnone, int index)
+GEN_LUABODY_IDX(return, isnone, index)
+GEN_LUAFUNC_IDX(int, isnoneornil, int index)
+GEN_LUABODY_IDX(return, isnoneornil, index)
+GEN_LUAFUNC_IDX(int, isnumber, int index)
+GEN_LUABODY_IDX(return, isnumber, index)
+GEN_LUAFUNC_IDX(int, isstring, int index)
+GEN_LUABODY_IDX(return, isstring, index)
+GEN_LUAFUNC_IDX(int, istable, int index)
+GEN_LUABODY_IDX(return, istable, index)
+GEN_LUAFUNC_IDX(int, isthread, int index)
+GEN_LUABODY_IDX(return, isthread, index)
+GEN_LUAFUNC_IDX(int, isuserdata, int index)
+GEN_LUABODY_IDX(return, isuserdata, index)
 GEN_LUAFUNC(int, isyieldable, void)
 GEN_LUABODY(return, isyieldable)
 GEN_LUAFUNC(_VOID_T, len, int index)
@@ -205,30 +232,30 @@ GEN_LUAFUNC(int, status, void)
 GEN_LUABODY(return, status)
 GEN_LUAFUNC(size_t, stringtonumber, const char *s)
 GEN_LUABODY(return, stringtonumber, s)
-GEN_LUAFUNC(int, toboolean, int index)
-GEN_LUABODY(return, toboolean, index)
-GEN_LUAFUNC(lua_CFunction, tocfunction, int index)
-GEN_LUABODY(return, tocfunction, index)
+GEN_LUAFUNC_IDX(int, toboolean, int index)
+GEN_LUABODY_IDX(return, toboolean, index)
+GEN_LUAFUNC_IDX(lua_CFunction, tocfunction, int index)
+GEN_LUABODY_IDX(return, tocfunction, index)
 GEN_LUAFUNC(_VOID_T, toclose, int index)
 GEN_VLUABODY(toclose, index)
-GEN_LUAFUNC(lua_Integer, tointeger, int index)
-GEN_LUABODY(return, tointeger, index)
+GEN_LUAFUNC_IDX(lua_Integer, tointeger, int index)
+GEN_LUABODY_IDX(return, tointeger, index)
 GEN_LUAFUNC(lua_Integer, tointegerx, int index, int* isnum)
 GEN_LUABODY(return, tointegerx, index, isnum)
 GEN_LUAFUNC(const char*, tolstring, int index, size_t* len)
 GEN_LUABODY(return, tolstring, index, len)
-GEN_LUAFUNC(lua_Number, tonumber, int index)
-GEN_LUABODY(return, tonumber, index)
-GEN_LUAFUNC(lua_Number, tonumberx, int index, int* isnum)
-GEN_LUABODY(return, tonumberx, index, isnum)
-GEN_LUAFUNC(const void*, topointer, int index)
-GEN_LUABODY(return, topointer, index)
-GEN_LUAFUNC(const char*, tostring, int index)
-GEN_LUABODY(return, tostring, index)
-GEN_LUAFUNC(lua_State*, tothread, int index)
-GEN_LUABODY(return, tothread, index)
-GEN_LUAFUNC(void*, touserdata, int index)
-GEN_LUABODY(return, touserdata, index)
+GEN_LUAFUNC_IDX(lua_Number, tonumber, int index)
+GEN_LUABODY_IDX(return, tonumber, index)
+GEN_LUAFUNC_IDX(lua_Number, tonumberx, int index, int* isnum)
+GEN_LUABODY_IDX(return, tonumberx, index, isnum)
+GEN_LUAFUNC_IDX(const void*, topointer, int index)
+GEN_LUABODY_IDX(return, topointer, index)
+GEN_LUAFUNC_IDX(const char*, tostring, int index)
+GEN_LUABODY_IDX(return, tostring, index)
+GEN_LUAFUNC_IDX(lua_State*, tothread, int index)
+GEN_LUABODY_IDX(return, tothread, index)
+GEN_LUAFUNC_IDX(void*, touserdata, int index)
+GEN_LUABODY_IDX(return, touserdata, index)
 GEN_LUAFUNC(int, type, int index)
 GEN_LUABODY(return, type, index)
 // GEN_LUAFUNC(const char*, typename, int tp)
@@ -318,12 +345,21 @@ GEN_VLUABODY_L(setmetatable, tname.c_str())
 #undef GEN_BODY
 #undef GEN_LUABODY
 #undef GEN_LUAFUNC
+#undef GEN_LUAFUNC_IDX
 
 #undef GEN_LUABODY
+#undef GEN_LUABODY_IDX
 #undef GEN_LUABODY_L
+#undef GEN_LUABODY_LIDX
 #undef GEN_VLUABODY
+#undef GEN_VLUABODY_IDX
 #undef GEN_VLUABODY_L
+#undef GEN_VLUABODY_LIDX
 #undef GEN_ILUABODY
+#undef GEN_ILUABODY_IDX
 #undef GEN_ILUABODY_L
+#undef GEN_ILUABODY_LIDX
+#undef INDEX_SPECIALIZATION
+#undef GET_INDEX
 #undef _VOID_T
 #undef _GEN_GETL

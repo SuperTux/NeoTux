@@ -32,7 +32,7 @@ main()
 
 	doohickey(state);
 	state.pushcfunction([](lua_State *_s) {
-		((lua::LuaState)_s).pushstring("hi");
+		lua::LuaState(_s).pushstring("hi");
 		return 1;
 	}).setglobal("mycoolfunction");
 
@@ -41,7 +41,7 @@ main()
 	//state.pcall(0, LUA_MULTRET, 0);
 
 	std::cout << "Got " << state.gettop().tostring() << std::endl;
-	state.pop(); //bye
+	state.pop();
 
 	return 0;
 }
