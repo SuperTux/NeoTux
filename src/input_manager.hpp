@@ -17,6 +17,7 @@
 #ifndef SUPERTUX_SRC_INPUT_MANAGER_HPP
 #define SUPERTUX_SRC_INPUT_MANAGER_HPP
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
