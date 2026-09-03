@@ -23,6 +23,10 @@
 struct MusicData
 {
 	std::string file;
+
+	// TODO: I don't think having loop points determined in seconds allows for enough granularity...
+	// perhaps support another option in the music file format for milliseconds ("loop-begin-ms")
+	// or something even more granular like straight up sample frames to keep backwards compat.
 	u32 loop_begin = 0;
 	u32 loop_at    = UINT_MAX;
 };

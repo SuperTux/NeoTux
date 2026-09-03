@@ -16,6 +16,8 @@
 
 #include "sound_manager.hpp"
 
+#include <SDL3_mixer/SDL_mixer.h>
+
 #include <string>
 #include <unordered_map>
 
@@ -24,7 +26,7 @@
 
 struct SoundManager::Impl
 {
-	std::unordered_map<std::string, ma_sound> sounds;
+	std::unordered_map<std::string, Sound> sounds;
 };
 
 SoundManager g_sound_manager;
@@ -34,20 +36,20 @@ SoundManager::SoundManager()
 {
 }
 
-ma_sound *
+Sound
 SoundManager::load(const std::string &path)
 {
 	auto it = impl->sounds.find(path);
 	if (it == impl->sounds.end())
 	{
-		auto new_it   = impl->sounds.insert({ path, {} });
-		ma_sound *out = &new_it.first->second;
-		ma_sound_init_from_file(g_mixer.engine(), FS::path(path).c_str(),
-		                        MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_ASYNC, nullptr, nullptr, out);
+		Sound out;
+		out.audio = MIX_LoadAudio(g_mixer.engine(), path.c_str(), true);
+		out.track = g_mixer.create_sound_track(out.audio);
+		impl->sounds.insert({ path, out });
 		return out;
 	}
 	else
 	{
-		return &it->second;
+		return it->second;
 	}
 }
