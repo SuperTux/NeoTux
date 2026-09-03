@@ -16,9 +16,6 @@
 
 #include "mixer.hpp"
 
-#include <miniaudio.h>
-#include <miniaudio_libvorbis.h>
-
 #include <format>
 
 #include "audio/music_reader.hpp"
@@ -27,18 +24,15 @@
 #include "util/filesystem.hpp"
 #include "util/logger.hpp"
 
-MAException::MAException(const std::string &what, int result)
-    : std::runtime_error(std::format("{} (ma error: {})", what, result))
-{
-}
-
 struct Mixer::Impl
 {
-	ma_engine engine;
-	ma_resource_manager resource_manager;
+	MIX_Mixer *engine;
 
-	ma_sound music;
+	MIX_Track *music_track;
 	MusicData music_data;
+
+	/// Not to be confused with music. Each sound has its own SDL3 mixer track.
+	std::vector<MIX_Track *> sound_tracks;
 };
 
 Mixer g_mixer;
@@ -46,46 +40,30 @@ Mixer g_mixer;
 Mixer::Mixer()
     : impl(std::make_unique<Impl>())
 {
-	ma_result result;
+	if (!MIX_Init())
+		throw SDLException("SDL3_mixer initialization failed");
 
-	ma_decoding_backend_vtable *decoders[] = {
-		ma_decoding_backend_libvorbis
-	};
+	impl->engine = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+	if (!impl->engine)
+		throw SDLException("Mixer object creation failed");
 
-	ma_resource_manager_config resource_manager_cfg     = ma_resource_manager_config_init();
-	resource_manager_cfg.pCustomDecodingBackendUserData = nullptr;
-	resource_manager_cfg.ppCustomDecodingBackendVTables = decoders;
-	resource_manager_cfg.customDecodingBackendCount     = sizeof(decoders) / sizeof(decoders[0]);
+	impl->music_track = MIX_CreateTrack(engine());
+	if (!impl->music_track)
+		throw SDLException("Music track creation failed");
 
-	result = ma_resource_manager_init(&resource_manager_cfg, &impl->resource_manager);
-	if (result != MA_SUCCESS)
-	{
-		throw MAException("Failed to initialize resource manager", result);
-	}
+	// Logger::info("Mixer", "Opened audio device:");
+	// Logger::info("Mixer",
+	// std::format("\tSample rate: {}Hz", dev_info.nativeDataFormats[0].sampleRate));
+	// Logger::info("Mixer", std::format("\tChannels: {} sound ({})",
+	// get_channels_name(dev_info.nativeDataFormats[0].channels),
+	// dev_info.nativeDataFormats[0].channels));
+	// Logger::info("Mixer", std::format("\tFormat: {}",
+	// ma_get_format_name(dev_info.nativeDataFormats[0].format)));
+}
 
-	ma_engine_config engine_cfg;
-	engine_cfg                  = ma_engine_config_init();
-	engine_cfg.pResourceManager = &impl->resource_manager;
-
-	result = ma_engine_init(&engine_cfg, &impl->engine);
-	if (result != MA_SUCCESS)
-	{
-		throw MAException("Failed to initialize engine", result);
-	}
-
-	ma_device *dev;
-	ma_device_info dev_info;
-	dev = ma_engine_get_device(&impl->engine);
-	ma_device_get_info(dev, ma_device_type_playback, &dev_info);
-
-	Logger::info("Mixer", "Opened audio device:");
-	Logger::info("Mixer",
-	             std::format("\tSample rate: {}Hz", dev_info.nativeDataFormats[0].sampleRate));
-	Logger::info("Mixer", std::format("\tChannels: {} sound ({})",
-	                                  get_channels_name(dev_info.nativeDataFormats[0].channels),
-	                                  dev_info.nativeDataFormats[0].channels));
-	Logger::info("Mixer", std::format("\tFormat: {}",
-	                                  ma_get_format_name(dev_info.nativeDataFormats[0].format)));
+Mixer::~Mixer()
+{
+	shutdown();
 }
 
 std::string
@@ -102,47 +80,56 @@ Mixer::get_channels_name(u32 channels)
 void
 Mixer::shutdown()
 {
-	ma_sound_uninit(&impl->music);
-	ma_engine_uninit(&impl->engine);
-	ma_resource_manager_uninit(&impl->resource_manager);
+	if (impl->engine)
+		MIX_DestroyMixer(impl->engine);
 }
 
 bool
 Mixer::is_playing_music()
 {
-	return ma_sound_is_playing(&impl->music);
+	return MIX_TrackPlaying(impl->music_track);
 }
 
 void
 Mixer::stop_playing_music()
 {
-	ma_sound_stop(&impl->music);
+	MIX_StopTrack(impl->music_track, 0);
 }
 
-ma_engine *
+MIX_Mixer *
 Mixer::engine()
 {
-	return &impl->engine;
+	return impl->engine;
+}
+
+std::size_t
+Mixer::create_sound_track(MIX_Audio *audio)
+{
+	MIX_Track *track = MIX_CreateTrack(engine());
+	if (!track)
+		throw SDLException("Failed to create sound track");
+
+	MIX_SetTrackAudio(track, audio);
+	MIX_TagTrack(track, "sounds");
+	impl->sound_tracks.push_back(track);
+	return impl->sound_tracks.size() - 1;
 }
 
 void
 Mixer::play_sound(const std::string &filename)
 {
-	ma_sound *sound = g_sound_manager.load(filename);
-	play_sound(sound);
+	play_sound(g_sound_manager.load(FS::path(filename)));
 }
 
 void
-Mixer::play_sound(ma_sound *sound)
+Mixer::play_sound(Sound sound)
 {
-	if (ma_sound_is_playing(sound))
-		ma_sound_stop(sound);
+	MIX_Track *const track = impl->sound_tracks[sound.track];
+	if (MIX_TrackPlaying(track))
+		MIX_StopTrack(track, 0);
 
-	ma_result result = ma_sound_start(sound);
-	if (result != MA_SUCCESS)
-	{
-		throw MAException("Failed to play sound", result);
-	}
+	if (!MIX_PlayTrack(track, 0))
+		throw SDLException("Failed to play sound track");
 }
 
 void
@@ -159,28 +146,24 @@ Mixer::play_music(std::string filename)
 		impl->music_data = {};
 	}
 
-	ma_result result;
-	ma_sound_uninit(&impl->music);
-	result = ma_sound_init_from_file(&impl->engine, FS::path(filename).c_str(),
-	                                 MA_SOUND_FLAG_STREAM, nullptr, nullptr, &impl->music);
+	// FIXME: doesn't seem like MusicData::file ever worked :/
+	MIX_Audio *music = MIX_LoadAudio(engine(), FS::path(filename).c_str(), false);
+	if (!music)
+		throw SDLException(std::format("Failed to load music '{}'", FS::path(filename)));
 
-	if (result != MA_SUCCESS)
-	{
-		throw MAException(std::format("Failed to load music {}", FS::path(filename)), result);
-	}
+	if (!MIX_SetTrackAudio(impl->music_track, music))
+		throw SDLException(std::format("Failed to set music track audio '{}'", FS::path(filename)));
 
-	ma_data_source *music_source = ma_sound_get_data_source(&impl->music);
-	ma_uint32 samplerate;
-	ma_data_source_get_data_format(music_source, nullptr, nullptr, &samplerate, nullptr, 67);
+	SDL_PropertiesID playprops = SDL_CreateProperties();
+	SDL_SetNumberProperty(playprops, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+	SDL_SetNumberProperty(playprops, MIX_PROP_PLAY_LOOP_START_MILLISECOND_NUMBER,
+	                      impl->music_data.loop_begin * 1000);
+	SDL_SetNumberProperty(playprops, MIX_PROP_PLAY_MAX_MILLISECONDS_NUMBER,
+	                      (impl->music_data.loop_at == UINT32_MAX)
+	                          ? -1
+	                          : impl->music_data.loop_at * 1000);
+	if (!MIX_PlayTrack(impl->music_track, playprops))
+		throw SDLException(std::format("Failed to play music '{}'", FS::path(filename)));
 
-	ma_data_source_set_loop_point_in_pcm_frames(music_source,
-	                                            impl->music_data.loop_begin * samplerate,
-	                                            impl->music_data.loop_at * samplerate);
-	ma_sound_set_looping(&impl->music, MA_TRUE);
-
-	result = ma_sound_start(&impl->music);
-	if (result != MA_SUCCESS)
-	{
-		throw MAException(std::format("Failed to play music {}", FS::path(filename)), result);
-	}
+	SDL_DestroyProperties(playprops);
 }

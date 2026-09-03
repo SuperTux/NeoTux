@@ -20,26 +20,19 @@ endif()
 find_package(SDL3 REQUIRED)
 find_package(SDL3_ttf)
 find_package(SDL3_image)
+find_package(SDL3_mixer)
 find_package(PkgConfig REQUIRED)
 find_package(Lua 5.4 REQUIRED)
+
 pkg_check_modules(SDL3_image REQUIRED IMPORTED_TARGET sdl3-image)
 pkg_check_modules(SDL3_ttf REQUIRED IMPORTED_TARGET sdl3-ttf)
+pkg_check_modules(SDL3_mixer REQUIRED IMPORTED_TARGET sdl3-mixer)
 
 include(FetchContent)
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
 	cmake_policy(SET CMP0135 NEW)
 endif()
-
-set(MINIAUDIO_VERSION "0.11.23" CACHE STRING "Version of miniaudio to use")
-set(MINIAUDIO_NO_MP3 YES)
-set(MINIAUDIO_NO_FLAC YES)
-set(MINIAUDIO_NO_LIBVORBIS NO)
-FetchContent_Declare(
-	miniaudio
-	URL https://github.com/mackron/miniaudio/archive/refs/tags/${MINIAUDIO_VERSION}.tar.gz
-)
-FetchContent_MakeAvailable(miniaudio)
 
 set(SFSEXP_VERSION "1.4.1" CACHE STRING "Version of SfSexp to use")
 FetchContent_Declare(
@@ -113,15 +106,10 @@ target_link_libraries(NeoTux PUBLIC
 	SDL3::SDL3
 	SDL3_ttf::SDL3_ttf
 	SDL3_image::SDL3_image
+	SDL3_mixer::SDL3_mixer
 
 	SFSEXP
-
-	miniaudio
-	miniaudio_libvorbis
 )
-
-# NOTE: They seem to have forgotten to add this include directory to the miniaudio_libvorbis target.
-target_include_directories(NeoTux SYSTEM PUBLIC ${miniaudio_SOURCE_DIR}/extras/decoders/libvorbis)
 
 if(NEOTUX_BGFX)
 	target_sources(NeoTux PRIVATE "${NEOTUX_DATA_DIR}/shaders/frag.glsl" "${NEOTUX_DATA_DIR}/shaders/vert.glsl")
