@@ -6,6 +6,9 @@ build.*/
 **/CMakeCache.txt
 supertux2
 
+# Game data (not stored with the engine)
+data/
+
 # For testing
 scripts/data/
 
