@@ -81,7 +81,10 @@ void
 Mixer::shutdown()
 {
 	if (impl->engine)
+	{
 		MIX_DestroyMixer(impl->engine);
+		impl->engine = NULL;
+	}
 }
 
 bool
